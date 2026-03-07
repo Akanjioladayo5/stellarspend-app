@@ -49,6 +49,7 @@ export interface Budget {
   endDate: string;
   createdAt: string;
   updatedAt: string;
+}
 export interface FilterParams {
   dateFrom?: string;
   dateTo?: string;

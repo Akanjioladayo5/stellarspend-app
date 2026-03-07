@@ -1,15 +1,65 @@
-import type { Metadata } from "next";
+'use client'
+
+import { useState } from "react";
 import BalancesWidget from "@/components/dashboard/BalancesWidget";
 import QuickActions from "@/components/dashboard/QuickActions";
 import RecentTransactions from "@/components/dashboard/RecentTransactions";
+import GoalForm from "@/components/savings/GoalForm";
+import { ContributionWidget } from "@/components/savings/ContributionWidget";
 
-export const metadata: Metadata = {
-  title: "Dashboard — StellarSpend",
-  description:
-    "Your StellarSpend financial overview: wallet balances, quick actions, and recent transactions.",
-};
+interface Goal {
+  id: string
+  name: string
+  targetAmount: number
+  currentAmount: number
+  deadline: string
+  recurrence: 'once' | 'monthly' | 'yearly'
+  createdAt: Date
+}
+
+interface GoalFormData {
+  title: string;
+  targetAmount: number;
+  deadline: string;
+  recurrence: 'once' | 'monthly' | 'yearly';
+}
 
 export default function DashboardPage() {
+  const [goals, setGoals] = useState<Goal[]>([
+    {
+      id: '1',
+      name: 'New Laptop',
+      targetAmount: 1200,
+      currentAmount: 300,
+      deadline: '2024-12-31',
+      recurrence: 'once',
+      createdAt: new Date(),
+    },
+  ]);
+  const [goalModalOpen, setGoalModalOpen] = useState(false);
+  const availableBalance = 500; // Mock balance
+
+  const handleGoalCreated = (goalData: GoalFormData) => {
+    const newGoal: Goal = {
+      id: Math.random().toString(36).substring(2, 11),
+      name: goalData.title,
+      targetAmount: goalData.targetAmount,
+      currentAmount: 0,
+      deadline: goalData.deadline,
+      recurrence: goalData.recurrence,
+      createdAt: new Date(),
+    };
+    setGoals(prev => [...prev, newGoal]);
+  };
+
+  const handleContribute = (goalId: string, amount: number) => {
+    setGoals(prev => prev.map(goal =>
+      goal.id === goalId
+        ? { ...goal, currentAmount: goal.currentAmount + amount }
+        : goal
+    ));
+  };
+
   return (
     <div className="max-w-6xl mx-auto space-y-8">
       {/* Page heading */}
@@ -24,7 +74,7 @@ export default function DashboardPage() {
           Good day, <span className="text-[#e8b84b]">Stellar</span> user
         </h1>
         <p className="text-[#7a8aaa] mt-1 text-sm max-w-md">
-          Here's a snapshot of your portfolio and recent blockchain activity.
+          Here&apos;s a snapshot of your portfolio and recent blockchain activity.
         </p>
       </div>
 
@@ -34,8 +84,43 @@ export default function DashboardPage() {
       {/* Quick Actions */}
       <QuickActions />
 
+      {/* Savings Goals */}
+      <div>
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-2xl font-bold text-white">Savings Goals</h2>
+          <button
+            onClick={() => setGoalModalOpen(true)}
+            className="px-4 py-2 bg-[#e8b84b] text-black rounded-lg hover:bg-[#e8b84b]/90 transition-colors"
+          >
+            Create Goal
+          </button>
+        </div>
+        {goals.length === 0 ? (
+          <div className="text-center py-8 text-[#7a8aaa]">
+            No savings goals yet. Create your first goal to start saving!
+          </div>
+        ) : (
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {goals.map(goal => (
+              <ContributionWidget
+                key={goal.id}
+                goal={goal}
+                onContribute={handleContribute}
+                availableBalance={availableBalance}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+
       {/* Recent Transactions */}
       <RecentTransactions />
+
+      <GoalForm
+        open={goalModalOpen}
+        onOpenChange={setGoalModalOpen}
+        onGoalCreated={handleGoalCreated}
+      />
     </div>
   );
 }

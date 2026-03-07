@@ -22,16 +22,10 @@ describe('User Journey: Landing → Wallet → Budget → Transaction', () => {
     cy.mockFreighter();
     
     cy.window().then((win) => {
-      const freighter = (win as any).freighter;
+      const freighter = (win as typeof win & { freighter: unknown }).freighter;
       expect(freighter).to.exist;
-      
-      freighter.getPublicKey().then((key: string) => {
-        expect(key).to.equal('GDQP2KPQGKIHYJGXNUIYOMHARUARCA7DJT5FO2FFOOKY3B2WSQHG4W37');
-      });
-      
-      freighter.isConnected().then((connected: boolean) => {
-        expect(connected).to.be.true;
-      });
+      void cy.wrap(freighter).invoke('getPublicKey').should('equal', 'GDQP2KPQGKIHYJGXNUIYOMHARUARCA7DJT5FO2FFOOKY3B2WSQHG4W37');
+      void cy.wrap(freighter).invoke('isConnected').should('equal', true);
     });
   });
 

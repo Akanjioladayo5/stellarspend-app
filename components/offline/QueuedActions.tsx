@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { useOffline, QueuedAction } from './OfflineProvider';
-import { RefreshCw, Trash2, Clock, CheckCircle2, History } from 'lucide-react';
+import { RefreshCw, Trash2, Clock, History } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function QueuedActions() {

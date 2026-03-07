@@ -4,7 +4,6 @@ import React from "react";
 import {
   ArrowUpRight,
   ArrowDownLeft,
-  RefreshCw,
   AlertCircle,
   ChevronRight,
 } from "lucide-react";

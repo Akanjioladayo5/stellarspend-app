@@ -29,32 +29,47 @@ interface NotificationContextType {
   updatePreferences: (prefs: Partial<NotificationPreferences>) => void;
 }
 
-const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
+export const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
 
 const STORAGE_KEY = "stellarspend_notifications";
 const PREFS_KEY = "stellarspend_notification_preferences";
 
 export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [toasts, setToasts] = useState<Notification[]>([]);
-  const [preferences, setPreferences] = useState<NotificationPreferences>({
-    success: true,
-    error: true,
-    info: true,
+  const [notifications, setNotifications] = useState<Notification[]>(() => {
+    // Initialize with saved notifications from localStorage
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        try {
+          return JSON.parse(saved);
+        } catch (e) {
+          console.error('Failed to parse saved notifications', e);
+        }
+      }
+    }
+    return [];
   });
 
-  // Load from localStorage on mount
-  useEffect(() => {
-    const savedNotifications = localStorage.getItem(STORAGE_KEY);
-    if (savedNotifications) {
-      setNotifications(JSON.parse(savedNotifications));
-    }
+  const [toasts, setToasts] = useState<Notification[]>([]);
 
-    const savedPrefs = localStorage.getItem(PREFS_KEY);
-    if (savedPrefs) {
-      setPreferences(JSON.parse(savedPrefs));
+  const [preferences, setPreferences] = useState<NotificationPreferences>(() => {
+    // Initialize with saved preferences from localStorage
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem(PREFS_KEY);
+      if (saved) {
+        try {
+          return JSON.parse(saved);
+        } catch (e) {
+          console.error('Failed to parse saved preferences', e);
+        }
+      }
     }
-  }, []);
+    return {
+      success: true,
+      error: true,
+      info: true,
+    };
+  });
 
   // Save notifications to localStorage
   useEffect(() => {
@@ -65,6 +80,10 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
   useEffect(() => {
     localStorage.setItem(PREFS_KEY, JSON.stringify(preferences));
   }, [preferences]);
+
+  const removeToast = useCallback((id: string) => {
+    setToasts((prev) => prev.filter((t) => t.id !== id));
+  }, []);
 
   const addNotification = useCallback((type: NotificationType, message: string) => {
     const newNotification: Notification = {
@@ -86,11 +105,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
         removeToast(newNotification.id);
       }, 5000);
     }
-  }, [preferences]);
-
-  const removeToast = useCallback((id: string) => {
-    setToasts((prev) => prev.filter((t) => t.id !== id));
-  }, []);
+  }, [preferences, removeToast]);
 
   const markAsRead = useCallback((id: string) => {
     setNotifications((prev) =>

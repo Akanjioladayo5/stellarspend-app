@@ -81,6 +81,11 @@ function ReceiveModal({ onClose }: { onClose: () => void }) {
     setTimeout(() => setCopied(false), 2000);
   };
 
+  // Generate QR pattern once to avoid Math.random() in render
+  const [qrPattern] = useState(() => {
+    return Array.from({ length: 16 }).map(() => Math.random() > 0.5);
+  });
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div
@@ -106,10 +111,10 @@ function ReceiveModal({ onClose }: { onClose: () => void }) {
         {/* QR placeholder */}
         <div className="w-36 h-36 mx-auto mb-6 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center">
           <div className="grid grid-cols-4 gap-1 p-3 opacity-50">
-            {Array.from({ length: 16 }).map((_, i) => (
+            {qrPattern.map((isFilled, i) => (
               <div
                 key={i}
-                className={`w-3 h-3 rounded-sm ${Math.random() > 0.5 ? "bg-[#e8b84b]" : "bg-transparent"}`}
+                className={`w-3 h-3 rounded-sm ${isFilled ? "bg-[#e8b84b]" : "bg-transparent"}`}
               />
             ))}
           </div>

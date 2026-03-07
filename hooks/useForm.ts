@@ -4,7 +4,6 @@ import {
   UseFormProps as UseHookFormProps,
   UseFormReturn,
   FieldValues,
-  Resolver,
 } from 'react-hook-form';
 import { z } from 'zod';
 

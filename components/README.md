@@ -25,7 +25,7 @@ A flexible card component with support for header, body, and footer slots.
 
 #### Usage Example
 ```tsx
-import { Card, CardHeader, CardBody, CardFooter } from '@/components/ui/Card';
+import { Card, CardHeader, CardBody, CardFooter } from '@/components/ui/card';
 
 export function Example() {
   return (

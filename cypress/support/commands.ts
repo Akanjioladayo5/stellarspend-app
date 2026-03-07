@@ -1,6 +1,6 @@
 /// <reference types="cypress" />
 
-declare namespace Cypress {
+declare module 'cypress' {
   interface Chainable {
     mockFreighter(): Chainable<void>;
     mockStellarAPI(): Chainable<void>;
@@ -10,7 +10,7 @@ declare namespace Cypress {
 Cypress.Commands.add('mockFreighter', () => {
   cy.fixture('wallet').then((wallet) => {
     cy.window().then((win) => {
-      (win as any).freighter = {
+      (win as typeof win & { freighter: unknown }).freighter = {
         isConnected: () => Promise.resolve(wallet.isConnected),
         getPublicKey: () => Promise.resolve(wallet.publicKey),
         getNetwork: () => Promise.resolve(wallet.network),

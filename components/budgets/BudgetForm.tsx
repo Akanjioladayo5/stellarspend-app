@@ -26,19 +26,25 @@ const budgetSchema = z.object({
 type BudgetFormData = z.infer<typeof budgetSchema>;
 
 interface BudgetFormProps {
-    onSubmit?: (data: BudgetFormData) => void;
+    onSubmit: (data: BudgetFormData) => void;
     onCancel?: () => void;
     initialData?: Budget | null;
     isEditing?: boolean;
 }
 
 export default function BudgetForm({ onSubmit, onCancel, initialData, isEditing = false }: BudgetFormProps) {
-    const { isOnline, queueAction } = useOffline();
+    const { isOnline: _isOnline, queueAction: _queueAction } = useOffline();
+    
+    // Calculate default end date once per component mount
+    const [defaultEndDate] = React.useState(() => {
+        return new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+    });
+    
     const {
         register,
         handleSubmit,
         formState: { errors, isValid, isSubmitting },
-        reset,
+        reset: _reset,
     } = useForm<BudgetFormData>({
         schema: budgetSchema,
         defaultValues: {
@@ -47,30 +53,10 @@ export default function BudgetForm({ onSubmit, onCancel, initialData, isEditing 
             category: initialData?.category || '',
             asset: initialData?.asset || 'XLM',
             startDate: initialData?.startDate || new Date().toISOString().split('T')[0],
-            endDate: initialData?.endDate || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+            endDate: initialData?.endDate || defaultEndDate,
         },
         mode: 'onChange',
     });
-
-    const handleSubmitForm = async (data: BudgetFormData) => {
-        if (onSubmit) {
-            onSubmit(data);
-            return;
-        }
-
-        if (!isOnline) {
-            queueAction('CREATE_BUDGET', `Create budget: ${data.name}`, data);
-            alert('You are offline. Your budget has been queued and will be saved when you reconnect.');
-            reset();
-            return;
-        }
-
-        // Simulate API call
-        console.log('Budget submitted:', data);
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-        alert('Budget saved successfully!');
-        reset();
-    };
 
     return (
         <div className="w-full max-w-md p-6 bg-white dark:bg-gray-800 rounded-xl shadow-lg">
@@ -78,8 +64,7 @@ export default function BudgetForm({ onSubmit, onCancel, initialData, isEditing 
                 {isEditing ? 'Edit Budget' : 'Create Budget'}
             </h2>
 
-            <form onSubmit={handleSubmit(handleSubmitForm as any)} className="space-y-4">
-            <form onSubmit={handleSubmit(onSubmit as any)} className="space-y-4" noValidate>
+            <form onSubmit={(handleSubmit as unknown as (handler: (data: BudgetFormData) => void) => React.FormEventHandler<HTMLFormElement>)((data: BudgetFormData) => onSubmit(data))} className="space-y-4" noValidate>
                 <div className="space-y-1">
                     <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                         Budget Name <span className="text-red-500" aria-label="required">*</span>
@@ -211,38 +196,6 @@ export default function BudgetForm({ onSubmit, onCancel, initialData, isEditing 
                         {isSubmitting ? 'Saving...' : (isEditing ? 'Update Budget' : 'Save Budget')}
                     </button>
                 </div>
-                    <fieldset className="space-y-2">
-                        <legend className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                            Period <span className="text-red-500" aria-label="required">*</span>
-                        </legend>
-                        <div className="flex space-x-4" role="group" aria-describedby="period-error">
-                            {['daily', 'monthly', 'quarterly'].map((p) => (
-                                <label key={p} className="flex items-center space-x-2 cursor-pointer">
-                                    <input
-                                        type="radio"
-                                        value={p}
-                                        {...register('period')}
-                                        className="w-4 h-4 text-blue-600"
-                                        aria-invalid={errors.period ? 'true' : 'false'}
-                                    />
-                                    <span className="text-sm capitalize text-gray-600 dark:text-gray-400">{p}</span>
-                                </label>
-                            ))}
-                        </div>
-                        {errors.period && (
-                            <p id="period-error" className="text-xs text-red-500 mt-1" role="alert">{errors.period.message}</p>
-                        )}
-                    </fieldset>
-                </div>
-
-                <button
-                    type="submit"
-                    disabled={!isValid || isSubmitting}
-                    className="w-full mt-6 px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white font-semibold rounded-lg shadow-md transition-colors duration-200"
-                    aria-describedby={(!isValid || isSubmitting) ? 'submit-help' : undefined}
-                >
-                    {isSubmitting ? 'Saving...' : 'Save Budget'}
-                </button>
                 {(!isValid || isSubmitting) && (
                     <p id="submit-help" className="text-xs text-gray-500 mt-1">
                         Please fill all required fields correctly before submitting.

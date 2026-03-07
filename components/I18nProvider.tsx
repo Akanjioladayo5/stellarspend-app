@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import i18next from 'i18next';
-import { initReactI18next, useTranslation } from 'react-i18next';
+import { initReactI18next } from 'react-i18next';
 import commonEn from '@/locales/en/common.json';
 import commonEs from '@/locales/es/common.json';
 
@@ -48,19 +48,18 @@ export const I18nProvider: React.FC<I18nProviderProps> = ({
   children, 
   initialLanguage = 'en' 
 }) => {
-  const [language, setLanguage] = useState(initialLanguage);
-  const [isReady, setIsReady] = useState(false);
+  const [language, setLanguage] = useState(() => {
+    // Initialize language from localStorage or default
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('stellarspend_language') || initialLanguage;
+    }
+    return initialLanguage;
+  });
 
   useEffect(() => {
-    // Load saved language from localStorage on mount
-    const savedLanguage = typeof window !== 'undefined' 
-      ? localStorage.getItem('stellarspend_language') || initialLanguage 
-      : initialLanguage;
-    
-    setLanguage(savedLanguage);
-    i18next.changeLanguage(savedLanguage);
-    setIsReady(true);
-  }, [initialLanguage]);
+    // Set i18next language when language changes
+    i18next.changeLanguage(language);
+  }, [language]);
 
   const changeLanguage = async (lng: string) => {
     await i18next.changeLanguage(lng);
@@ -73,8 +72,7 @@ export const I18nProvider: React.FC<I18nProviderProps> = ({
   };
 
   const t = (key: string): string => {
-    const keys = key.split('.');
-    let value: any = i18next.t(key);
+    let value: string = i18next.t(key);
     
     // Fallback to English if translation not found
     if (value === key && language !== 'en') {
@@ -86,10 +84,6 @@ export const I18nProvider: React.FC<I18nProviderProps> = ({
     
     return value || key;
   };
-
-  if (!isReady) {
-    return null;
-  }
 
   return (
     <I18nContext.Provider value={{ language, changeLanguage, t }}>

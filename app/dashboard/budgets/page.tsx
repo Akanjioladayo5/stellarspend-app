@@ -4,6 +4,15 @@ import React, { useState, useEffect } from 'react';
 import { fetchBudgets, createBudget, updateBudget, deleteBudget, Budget } from '@/lib/api/client';
 import BudgetForm from '@/components/budgets/BudgetForm';
 
+interface BudgetFormData {
+  name: string;
+  amount: number;
+  category: string;
+  asset: 'XLM' | 'USDC' | 'EURC';
+  startDate: string;
+  endDate: string;
+}
+
 export default function BudgetsPage() {
     const [budgets, setBudgets] = useState<Budget[]>([]);
     const [loading, setLoading] = useState(true);
@@ -76,7 +85,7 @@ export default function BudgetsPage() {
         setEditingBudget(null);
     };
 
-    const handleSubmit = (data: any) => {
+    const handleSubmit = (data: BudgetFormData) => {
         if (editingBudget) {
             handleUpdateBudget(data);
         } else {

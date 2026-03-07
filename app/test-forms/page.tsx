@@ -1,6 +1,8 @@
+"use client";
+
 import BudgetForm from '@/components/budgets/BudgetForm';
 import GoalForm from '@/components/savings/GoalForm';
-import { Card, CardHeader, CardBody } from '@/components/ui/Card';
+import { Card, CardHeader, CardBody } from '@/components/ui/card';
 import { Grid } from '@/components/ui/Grid';
 
 export default function TestFormsPage() {
@@ -20,7 +22,7 @@ export default function TestFormsPage() {
                             <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-200">Budget Form</h2>
                         </CardHeader>
                         <CardBody>
-                            <BudgetForm />
+                            <BudgetForm onSubmit={() => {}} />
                         </CardBody>
                     </Card>
 
@@ -29,7 +31,7 @@ export default function TestFormsPage() {
                             <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-200">Goal Form</h2>
                         </CardHeader>
                         <CardBody>
-                            <GoalForm />
+                            <GoalForm open={true} onOpenChange={() => {}} onGoalCreated={() => {}} />
                         </CardBody>
                     </Card>
                 </Grid>

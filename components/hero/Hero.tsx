@@ -1,9 +1,7 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
-import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { ArrowRight, BookOpen, Bell } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import { useNotifications } from '@/context/NotificationContext';
 import { NotificationsCenter } from '@/components/notifications/NotificationsCenter';
 
