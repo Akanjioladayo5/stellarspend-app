@@ -44,11 +44,13 @@ export interface Budget {
   name: string;
   amount: number;
   category: string;
-  asset: 'XLM' | 'USDC' | 'EURC';
+  asset: "XLM" | "USDC" | "EURC";
   startDate: string;
   endDate: string;
   createdAt: string;
   updatedAt: string;
+}
+
 export interface FilterParams {
   dateFrom?: string;
   dateTo?: string;
@@ -373,7 +375,7 @@ export const MOCK_BUDGETS: Budget[] = [
     updatedAt: "2024-05-20T10:00:00Z",
   },
   {
-    id: "budget_2", 
+    id: "budget_2",
     name: "Transportation",
     amount: 150,
     category: "transport",
@@ -498,7 +500,9 @@ export async function fetchBudgets(): Promise<Budget[]> {
 /**
  * Create a new budget (mock — 500 ms latency).
  */
-export async function createBudget(budgetData: Omit<Budget, 'id' | 'createdAt' | 'updatedAt'>): Promise<Budget> {
+export async function createBudget(
+  budgetData: Omit<Budget, "id" | "createdAt" | "updatedAt">,
+): Promise<Budget> {
   await delay(500);
   const newBudget: Budget = {
     ...budgetData,
@@ -513,19 +517,22 @@ export async function createBudget(budgetData: Omit<Budget, 'id' | 'createdAt' |
 /**
  * Update an existing budget (mock — 400 ms latency).
  */
-export async function updateBudget(id: string, budgetData: Partial<Omit<Budget, 'id' | 'createdAt'>>): Promise<Budget> {
+export async function updateBudget(
+  id: string,
+  budgetData: Partial<Omit<Budget, "id" | "createdAt">>,
+): Promise<Budget> {
   await delay(400);
-  const budgetIndex = MOCK_BUDGETS.findIndex(b => b.id === id);
+  const budgetIndex = MOCK_BUDGETS.findIndex((b) => b.id === id);
   if (budgetIndex === -1) {
-    throw new Error('Budget not found');
+    throw new Error("Budget not found");
   }
-  
+
   MOCK_BUDGETS[budgetIndex] = {
     ...MOCK_BUDGETS[budgetIndex],
     ...budgetData,
     updatedAt: new Date().toISOString(),
   };
-  
+
   return MOCK_BUDGETS[budgetIndex];
 }
 
@@ -534,10 +541,10 @@ export async function updateBudget(id: string, budgetData: Partial<Omit<Budget, 
  */
 export async function deleteBudget(id: string): Promise<void> {
   await delay(300);
-  const budgetIndex = MOCK_BUDGETS.findIndex(b => b.id === id);
+  const budgetIndex = MOCK_BUDGETS.findIndex((b) => b.id === id);
   if (budgetIndex === -1) {
-    throw new Error('Budget not found');
+    throw new Error("Budget not found");
   }
-  
+
   MOCK_BUDGETS.splice(budgetIndex, 1);
 }

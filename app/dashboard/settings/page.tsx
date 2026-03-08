@@ -1,17 +1,21 @@
 "use client";
 
-import React from "react";
 import { useNotifications } from "@/context/NotificationContext";
-import { Bell, Check, AlertCircle, Info as InfoIcon, ArrowLeft, Globe } from "lucide-react";
+import {
+  Bell,
+  Check,
+  AlertCircle,
+  Info as InfoIcon,
+  ArrowLeft,
+  Globe,
+} from "lucide-react";
 import { Starfield } from "@/components/ui/Starfield";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import LanguageSelector from "@/components/settings/LanguageSelector";
-import { useI18n } from "@/components/I18nProvider";
 
 const SettingsPage = () => {
   const { preferences, updatePreferences } = useNotifications();
-  const { t } = useI18n();
 
   const togglePreference = (type: keyof typeof preferences) => {
     updatePreferences({ [type]: !preferences[type] });
@@ -33,8 +37,8 @@ const SettingsPage = () => {
 
       <div className="relative z-10 max-w-4xl mx-auto p-6 lg:p-12 space-y-12">
         <header className="space-y-4">
-          <Link 
-            href="/" 
+          <Link
+            href="/"
             className="inline-flex items-center gap-2 text-sm text-[#7a8aaa] hover:text-[#e8b84b] transition-colors group"
           >
             <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
@@ -45,12 +49,13 @@ const SettingsPage = () => {
               Platform <span className="text-[#e8b84b]">Settings</span>
             </h1>
             <p className="text-[#7a8aaa] max-w-xl text-lg font-light leading-relaxed">
-              Tailor your transaction alerts and notification flows for a personalized experience.
+              Tailor your transaction alerts and notification flows for a
+              personalized experience.
             </p>
           </div>
         </header>
 
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
@@ -62,8 +67,12 @@ const SettingsPage = () => {
                 <Bell className="w-6 h-6" />
               </div>
               <div className="space-y-1">
-                <h2 className="text-xl font-semibold text-white">Notification Preferences</h2>
-                <p className="text-sm text-[#7a8aaa]">Control which event types trigger real-time UI toasts.</p>
+                <h2 className="text-xl font-semibold text-white">
+                  Notification Preferences
+                </h2>
+                <p className="text-sm text-[#7a8aaa]">
+                  Control which event types trigger real-time UI toasts.
+                </p>
               </div>
             </div>
           </div>
@@ -77,9 +86,12 @@ const SettingsPage = () => {
                     <Check className="h-6 w-6" />
                   </div>
                   <div className="space-y-1">
-                    <h3 className="text-lg font-medium text-white group-hover:text-[#e8b84b] transition-colors">Success Alerts</h3>
+                    <h3 className="text-lg font-medium text-white group-hover:text-[#e8b84b] transition-colors">
+                      Success Alerts
+                    </h3>
                     <p className="text-[#7a8aaa] text-sm leading-relaxed max-w-md font-light">
-                      Visual confirmation for successful operations like payment execution or profile updates.
+                      Visual confirmation for successful operations like payment
+                      execution or profile updates.
                     </p>
                   </div>
                 </div>
@@ -106,9 +118,12 @@ const SettingsPage = () => {
                     <AlertCircle className="h-6 w-6" />
                   </div>
                   <div className="space-y-1">
-                    <h3 className="text-lg font-medium text-white group-hover:text-red-400 transition-colors">System Errors</h3>
+                    <h3 className="text-lg font-medium text-white group-hover:text-red-400 transition-colors">
+                      System Errors
+                    </h3>
                     <p className="text-[#7a8aaa] text-sm leading-relaxed max-w-md font-light">
-                      Immediate toasts when transactions fail, network connectivity issues occur, or validation errors arise.
+                      Immediate toasts when transactions fail, network
+                      connectivity issues occur, or validation errors arise.
                     </p>
                   </div>
                 </div>
@@ -135,9 +150,12 @@ const SettingsPage = () => {
                     <InfoIcon className="h-6 w-6" />
                   </div>
                   <div className="space-y-1">
-                    <h3 className="text-lg font-medium text-white group-hover:text-blue-400 transition-colors">Information & Tips</h3>
+                    <h3 className="text-lg font-medium text-white group-hover:text-blue-400 transition-colors">
+                      Information & Tips
+                    </h3>
                     <p className="text-[#7a8aaa] text-sm leading-relaxed max-w-md font-light">
-                      Non-critical messages, onboarding guidance, and general platform announcements.
+                      Non-critical messages, onboarding guidance, and general
+                      platform announcements.
                     </p>
                   </div>
                 </div>
@@ -156,14 +174,17 @@ const SettingsPage = () => {
               </div>
             </div>
           </div>
-          
+
           <div className="p-8 bg-white/[0.01] border-t border-white/5 flex justify-end">
-            <p className="text-xs text-[#7a8aaa] italic">Settings are automatically synchronized to your local secure storage.</p>
+            <p className="text-xs text-[#7a8aaa] italic">
+              Settings are automatically synchronized to your local secure
+              storage.
+            </p>
           </div>
         </motion.div>
 
         {/* Language Preferences Section */}
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.1 }}
@@ -175,8 +196,12 @@ const SettingsPage = () => {
                 <Globe className="w-6 h-6" />
               </div>
               <div className="space-y-1">
-                <h2 className="text-xl font-semibold text-white">Language Preferences</h2>
-                <p className="text-sm text-[#7a8aaa]">Choose your preferred language for the interface.</p>
+                <h2 className="text-xl font-semibold text-white">
+                  Language Preferences
+                </h2>
+                <p className="text-sm text-[#7a8aaa]">
+                  Choose your preferred language for the interface.
+                </p>
               </div>
             </div>
           </div>
@@ -184,9 +209,12 @@ const SettingsPage = () => {
           <div className="p-8">
             <LanguageSelector variant="list" />
           </div>
-          
+
           <div className="p-8 bg-white/[0.01] border-t border-white/5 flex justify-end">
-            <p className="text-xs text-[#7a8aaa] italic">Your language preference is saved locally and persists across sessions.</p>
+            <p className="text-xs text-[#7a8aaa] italic">
+              Your language preference is saved locally and persists across
+              sessions.
+            </p>
           </div>
         </motion.div>
       </div>

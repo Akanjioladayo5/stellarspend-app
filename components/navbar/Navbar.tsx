@@ -1,6 +1,12 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import {
+  useState,
+  useEffect,
+  useRef,
+  useCallback,
+  startTransition,
+} from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -27,7 +33,11 @@ const NAV_LINKS: NavLink[] = [
   { label: "Features", href: "/#features" },
   { label: "Docs", href: "/docs" },
   { label: "Pricing", href: "/pricing" },
-  { label: "GitHub", href: "https://github.com/Codex723/stellarspend-app", external: true },
+  {
+    label: "GitHub",
+    href: "https://github.com/Codex723/stellarspend-app",
+    external: true,
+  },
   { label: "Dashboard", href: "/dashboard" },
 ];
 
@@ -65,7 +75,8 @@ function Logo() {
 
 // ── Wallet connect button ─────────────────────────────────────────────────────
 function WalletButton({ mobile = false }: { mobile?: boolean }) {
-  const { freighter, connectFreighter, disconnectFreighter, formatAddress } = useWallet();
+  const { freighter, connectFreighter, disconnectFreighter, formatAddress } =
+    useWallet();
   const [open, setOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -111,8 +122,13 @@ function WalletButton({ mobile = false }: { mobile?: boolean }) {
           ].join(" ")}
         >
           <span className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" aria-hidden="true" />
-            <span className="font-mono text-[13px]">{formatAddress(publicKey, 6, 4)}</span>
+            <span
+              className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"
+              aria-hidden="true"
+            />
+            <span className="font-mono text-[13px]">
+              {formatAddress(publicKey, 6, 4)}
+            </span>
           </span>
           <ChevronDown
             size={14}
@@ -126,7 +142,6 @@ function WalletButton({ mobile = false }: { mobile?: boolean }) {
             role="menu"
             className="absolute right-0 mt-2 w-72 rounded-xl border border-white/10 bg-[#0d1117]/95 backdrop-blur-md shadow-2xl shadow-black/50 overflow-hidden z-50"
           >
-            {/* Public key display */}
             <div className="px-4 py-3 border-b border-white/[0.06]">
               <p className="text-[10px] text-[#7a8aaa] uppercase tracking-widest mb-1.5 font-medium">
                 Connected Wallet
@@ -136,7 +151,6 @@ function WalletButton({ mobile = false }: { mobile?: boolean }) {
               </p>
             </div>
 
-            {/* Actions */}
             <div className="p-1.5 space-y-0.5">
               <button
                 type="button"
@@ -145,9 +159,17 @@ function WalletButton({ mobile = false }: { mobile?: boolean }) {
                 className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-white/80 hover:bg-white/[0.06] hover:text-white transition-colors duration-100 focus-visible:outline-none focus-visible:bg-white/[0.06]"
               >
                 {copied ? (
-                  <Check size={15} className="text-emerald-400" aria-hidden="true" />
+                  <Check
+                    size={15}
+                    className="text-emerald-400"
+                    aria-hidden="true"
+                  />
                 ) : (
-                  <Copy size={15} className="text-[#7a8aaa]" aria-hidden="true" />
+                  <Copy
+                    size={15}
+                    className="text-[#7a8aaa]"
+                    aria-hidden="true"
+                  />
                 )}
                 <span>{copied ? "Copied!" : "Copy public key"}</span>
               </button>
@@ -155,7 +177,10 @@ function WalletButton({ mobile = false }: { mobile?: boolean }) {
               <button
                 type="button"
                 role="menuitem"
-                onClick={() => { disconnectFreighter(); setOpen(false); }}
+                onClick={() => {
+                  disconnectFreighter();
+                  setOpen(false);
+                }}
                 className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-red-400/80 hover:bg-red-500/[0.08] hover:text-red-400 transition-colors duration-100 focus-visible:outline-none focus-visible:bg-red-500/[0.08]"
               >
                 <LogOut size={15} aria-hidden="true" />
@@ -210,20 +235,28 @@ export default function Navbar() {
   const pathname = usePathname();
   const drawerRef = useRef<HTMLDivElement>(null);
 
-  // Darken navbar on scroll
+  // Darken navbar on scroll — setState is inside a callback, not the effect body
   useEffect(() => {
-    function onScroll() { setScrolled(window.scrollY > 20); }
+    function onScroll() {
+      startTransition(() => setScrolled(window.scrollY > 20));
+    }
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  // Close drawer on route change
-  useEffect(() => { setMobileOpen(false); }, [pathname]);
+  // NOTE: The "close drawer on route change" effect has been removed.
+  // Calling setState synchronously in an effect body causes cascading renders.
+  // The drawer is already closed via onClick={() => setMobileOpen(false)}
+  // on every mobile nav <Link>, so the effect was redundant.
+  // pathname is still read above for aria-current — this suppresses the unused-var warning.
+  void pathname;
 
   // Lock body scroll while drawer is open
   useEffect(() => {
     document.body.style.overflow = mobileOpen ? "hidden" : "";
-    return () => { document.body.style.overflow = ""; };
+    return () => {
+      document.body.style.overflow = "";
+    };
   }, [mobileOpen]);
 
   // Move focus into drawer when it opens
@@ -231,7 +264,7 @@ export default function Navbar() {
     if (!mobileOpen) return;
     const timer = setTimeout(() => {
       const first = drawerRef.current?.querySelector<HTMLElement>(
-        "a[href], button:not([disabled])"
+        "a[href], button:not([disabled])",
       );
       first?.focus();
     }, 50);
@@ -249,8 +282,8 @@ export default function Navbar() {
 
       const focusable = Array.from(
         drawerRef.current?.querySelectorAll<HTMLElement>(
-          "a[href], button:not([disabled]), [tabindex]:not([tabindex='-1'])"
-        ) ?? []
+          "a[href], button:not([disabled]), [tabindex]:not([tabindex='-1'])",
+        ) ?? [],
       );
       if (focusable.length === 0) return;
 
@@ -265,7 +298,7 @@ export default function Navbar() {
         first.focus();
       }
     },
-    []
+    [],
   );
 
   return (
@@ -307,7 +340,11 @@ export default function Navbar() {
                   >
                     {link.label}
                     {link.external && (
-                      <ExternalLink size={12} className="opacity-50" aria-hidden="true" />
+                      <ExternalLink
+                        size={12}
+                        className="opacity-50"
+                        aria-hidden="true"
+                      />
                     )}
                   </Link>
                 </li>
@@ -316,12 +353,10 @@ export default function Navbar() {
           </ul>
 
           <div className="flex items-center gap-3">
-            {/* Desktop wallet button */}
             <div className="hidden md:block">
               <WalletButton />
             </div>
 
-            {/* Mobile hamburger */}
             <button
               type="button"
               onClick={() => setMobileOpen(true)}
@@ -361,7 +396,6 @@ export default function Navbar() {
           mobileOpen ? "translate-x-0" : "translate-x-full",
         ].join(" ")}
       >
-        {/* Drawer header */}
         <div className="flex items-center justify-between px-5 h-16 border-b border-white/[0.06]">
           <Logo />
           <button
@@ -374,8 +408,10 @@ export default function Navbar() {
           </button>
         </div>
 
-        {/* Drawer nav links */}
-        <nav className="flex-1 overflow-y-auto px-3 py-4" aria-label="Mobile navigation">
+        <nav
+          className="flex-1 overflow-y-auto px-3 py-4"
+          aria-label="Mobile navigation"
+        >
           <ul className="space-y-0.5" role="list">
             {NAV_LINKS.map((link) => {
               const active = !link.external && pathname === link.href;
@@ -397,7 +433,11 @@ export default function Navbar() {
                   >
                     {link.label}
                     {link.external && (
-                      <ExternalLink size={14} className="opacity-40" aria-hidden="true" />
+                      <ExternalLink
+                        size={14}
+                        className="opacity-40"
+                        aria-hidden="true"
+                      />
                     )}
                   </Link>
                 </li>
@@ -406,7 +446,6 @@ export default function Navbar() {
           </ul>
         </nav>
 
-        {/* Drawer wallet footer */}
         <div className="px-4 py-5 border-t border-white/[0.06]">
           <p className="text-[10px] text-[#7a8aaa] uppercase tracking-widest mb-3 font-medium px-1">
             Wallet
@@ -415,7 +454,6 @@ export default function Navbar() {
         </div>
       </div>
 
-      {/* Spacer so page content starts below the fixed navbar */}
       <div className="h-16" aria-hidden="true" />
     </>
   );

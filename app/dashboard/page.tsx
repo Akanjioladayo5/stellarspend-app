@@ -24,7 +24,8 @@ export default function DashboardPage() {
           Good day, <span className="text-[#e8b84b]">Stellar</span> user
         </h1>
         <p className="text-[#7a8aaa] mt-1 text-sm max-w-md">
-          Here's a snapshot of your portfolio and recent blockchain activity.
+          Here&apos;s a snapshot of your portfolio and recent blockchain
+          activity.
         </p>
       </div>
 

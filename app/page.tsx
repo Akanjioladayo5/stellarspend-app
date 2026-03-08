@@ -3,6 +3,7 @@ import Hero from "@/components/hero/Hero";
 import FeaturesSection from "@/components/features/FeaturesSection";
 import TestimonialsSection from "@/components/testimonials/TestimonialsSection";
 import Carousel from "@/components/carousel/Carousel";
+import PricingCards from "@/components/pricing/PricingCards";
 import type { CarouselSlide } from "@/components/carousel/Carousel";
 
 export const metadata: Metadata = {
@@ -112,6 +113,7 @@ export default function HomePage() {
       </section>
 
       <FeaturesSection />
+      <PricingCards />
       <TestimonialsSection />
     </main>
   );

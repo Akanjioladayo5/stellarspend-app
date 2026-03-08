@@ -4,6 +4,13 @@ import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Send, Download, PieChart, Target, X } from "lucide-react";
 
+// Module-level constant — Math.random() runs once when the module loads,
+// never during a component render, so the react-hooks/purity rule is satisfied.
+const QR_CELLS: readonly boolean[] = Array.from(
+  { length: 16 },
+  () => Math.random() > 0.5,
+);
+
 // ─── Mini Send Modal ────────────────────────────────────────────────────────
 function SendModal({ onClose }: { onClose: () => void }) {
   return (
@@ -103,13 +110,13 @@ function ReceiveModal({ onClose }: { onClose: () => void }) {
         <p className="text-[#7a8aaa] text-sm mb-6">
           Share your Stellar address to receive funds.
         </p>
-        {/* QR placeholder */}
+        {/* QR placeholder — uses module-level constant, never re-computed on render */}
         <div className="w-36 h-36 mx-auto mb-6 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center">
           <div className="grid grid-cols-4 gap-1 p-3 opacity-50">
-            {Array.from({ length: 16 }).map((_, i) => (
+            {QR_CELLS.map((filled, i) => (
               <div
                 key={i}
-                className={`w-3 h-3 rounded-sm ${Math.random() > 0.5 ? "bg-[#e8b84b]" : "bg-transparent"}`}
+                className={`w-3 h-3 rounded-sm ${filled ? "bg-[#e8b84b]" : "bg-transparent"}`}
               />
             ))}
           </div>
@@ -128,7 +135,7 @@ function ReceiveModal({ onClose }: { onClose: () => void }) {
   );
 }
 
-// ─── Budget / Goal Modals (identical shell) ─────────────────────────────────
+// ─── Budget / Goal Modals ────────────────────────────────────────────────────
 function BudgetModal({ onClose }: { onClose: () => void }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -291,31 +298,31 @@ export default function QuickActions() {
           </h2>
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          {ACTIONS.map((action, i) => {
-            const Icon = action.icon;
-            return (
-              <motion.button
-                key={action.id}
-                id={`quick-action-${action.id}`}
-                onClick={() => setOpenModal(action.id as ModalId)}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.07 }}
-                whileHover={{ y: -3 }}
-                whileTap={{ scale: 0.96 }}
-                className={`flex flex-col items-center gap-3 p-5 rounded-2xl border ${action.bg} ${action.border} ${action.hover} transition-all duration-200 group`}
+          {ACTIONS.map((action, i) => (
+            <motion.button
+              key={action.id}
+              id={`quick-action-${action.id}`}
+              onClick={() => setOpenModal(action.id as ModalId)}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.07 }}
+              whileHover={{ y: -3 }}
+              whileTap={{ scale: 0.96 }}
+              className={`flex flex-col items-center gap-3 p-5 rounded-2xl border ${action.bg} ${action.border} ${action.hover} transition-all duration-200 group`}
+            >
+              <div
+                className={`p-3 rounded-xl ${action.bg} border ${action.border}`}
               >
-                <div
-                  className={`p-3 rounded-xl ${action.bg} border ${action.border}`}
-                >
-                  <Icon className="w-5 h-5" style={{ color: action.color }} />
-                </div>
-                <span className="text-xs font-bold text-[#e8edf8] uppercase tracking-wider group-hover:text-white transition-colors">
-                  {action.label}
-                </span>
-              </motion.button>
-            );
-          })}
+                <action.icon
+                  className="w-5 h-5"
+                  style={{ color: action.color }}
+                />
+              </div>
+              <span className="text-xs font-bold text-[#e8edf8] uppercase tracking-wider group-hover:text-white transition-colors">
+                {action.label}
+              </span>
+            </motion.button>
+          ))}
         </div>
       </div>
 

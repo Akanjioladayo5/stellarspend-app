@@ -189,7 +189,7 @@ export default function Footer() {
 
             {success && (
               <p className="footer__success">
-                ✓ You're subscribed! Welcome aboard.
+                ✓ You&apos;re subscribed! Welcome aboard.
               </p>
             )}
           </form>

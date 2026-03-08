@@ -1,20 +1,19 @@
 "use client";
 
-import React, { useEffect, useRef } from "react";
+import { useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   X,
   Copy,
   ExternalLink,
   Download,
-  ArrowUpRight,
-  ArrowDownLeft,
   Clock,
   Hash,
   FileText,
   Tag,
   CheckCircle2,
   AlertCircle,
+  ArrowDownLeft,
 } from "lucide-react";
 
 interface Operation {
@@ -292,7 +291,7 @@ export default function TransactionDrawer({
                         </span>
                       </div>
                       <p className="text-sm text-[#e8edf8] italic relative z-10 pl-2 border-l-2 border-[#e8b84b]/30">
-                        "{transaction.memo}"
+                        &quot;{transaction.memo}&quot;
                       </p>
                     </div>
                   )}

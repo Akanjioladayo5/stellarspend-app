@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import React from 'react';
-import { useI18n } from '@/components/I18nProvider';
-import { Globe } from 'lucide-react';
-import { motion } from 'framer-motion';
+import React from "react";
+import { useI18n } from "@/components/I18nProvider";
+import { Globe } from "lucide-react";
+import { motion } from "framer-motion";
 
 interface LanguageOption {
   code: string;
@@ -12,27 +12,26 @@ interface LanguageOption {
 }
 
 const languages: LanguageOption[] = [
-  { code: 'en', name: 'English', flag: '🇺🇸' },
-  { code: 'es', name: 'Español', flag: '🇪🇸' },
+  { code: "en", name: "English", flag: "🇺🇸" },
+  { code: "es", name: "Español", flag: "🇪🇸" },
 ];
 
 interface LanguageSelectorProps {
-  variant?: 'dropdown' | 'list';
+  variant?: "dropdown" | "list";
   className?: string;
 }
 
-export const LanguageSelector: React.FC<LanguageSelectorProps> = ({ 
-  variant = 'dropdown',
-  className = ''
+export const LanguageSelector: React.FC<LanguageSelectorProps> = ({
+  variant = "dropdown",
+  className = "",
 }) => {
   const { language, changeLanguage } = useI18n();
-  const currentLanguage = languages.find(l => l.code === language) || languages[0];
 
   const handleLanguageChange = async (lng: string) => {
     await changeLanguage(lng);
   };
 
-  if (variant === 'list') {
+  if (variant === "list") {
     return (
       <div className={`space-y-2 ${className}`}>
         <div className="flex items-center gap-2 text-[#e8b84b] mb-4">
@@ -42,7 +41,7 @@ export const LanguageSelector: React.FC<LanguageSelectorProps> = ({
         <p className="text-sm text-[#7a8aaa] mb-4">
           Choose your preferred language for the interface.
         </p>
-        
+
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {languages.map((lang) => (
             <motion.button
@@ -52,8 +51,8 @@ export const LanguageSelector: React.FC<LanguageSelectorProps> = ({
               whileTap={{ scale: 0.98 }}
               className={`relative inline-flex items-center gap-3 p-4 rounded-xl border transition-all duration-200 ${
                 language === lang.code
-                  ? 'border-[#e8b84b] bg-[#e8b84b]/10 text-white'
-                  : 'border-white/10 bg-white/[0.02] text-[#7a8aaa] hover:border-white/20 hover:bg-white/[0.05]'
+                  ? "border-[#e8b84b] bg-[#e8b84b]/10 text-white"
+                  : "border-white/10 bg-white/[0.02] text-[#7a8aaa] hover:border-white/20 hover:bg-white/[0.05]"
               }`}
             >
               <span className="text-2xl">{lang.flag}</span>
@@ -64,8 +63,18 @@ export const LanguageSelector: React.FC<LanguageSelectorProps> = ({
                   animate={{ scale: 1 }}
                   className="absolute -top-2 -right-2 w-6 h-6 bg-[#e8b84b] rounded-full flex items-center justify-center"
                 >
-                  <svg className="w-4 h-4 text-[#080b18]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  <svg
+                    className="w-4 h-4 text-[#080b18]"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M5 13l4 4L19 7"
+                    />
                   </svg>
                 </motion.div>
               )}
@@ -87,9 +96,9 @@ export const LanguageSelector: React.FC<LanguageSelectorProps> = ({
           className="bg-white/[0.02] border border-white/10 rounded-lg px-3 py-2 text-sm text-[#e8edf8] focus:outline-none focus:border-[#e8b84b]/50 focus:ring-1 focus:ring-[#e8b84b]/50 cursor-pointer appearance-none pr-8"
           style={{
             backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%237a8aaa'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
-            backgroundRepeat: 'no-repeat',
-            backgroundPosition: 'right 0.5rem center',
-            backgroundSize: '1em 1em',
+            backgroundRepeat: "no-repeat",
+            backgroundPosition: "right 0.5rem center",
+            backgroundSize: "1em 1em",
           }}
         >
           {languages.map((lang) => (

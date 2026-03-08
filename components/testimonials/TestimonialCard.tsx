@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import Image from 'next/image';
-import { motion } from 'framer-motion';
+import Image from "next/image";
+import { motion } from "framer-motion";
 
 interface TestimonialCardProps {
   quote: string;
@@ -34,7 +34,7 @@ export default function TestimonialCard({
     >
       {/* Quote */}
       <blockquote className="text-[#e8edf8] text-base leading-relaxed mb-6 italic flex-grow">
-        "{quote}"
+        &quot;{quote}&quot;
       </blockquote>
 
       {/* Author Info */}
@@ -46,7 +46,7 @@ export default function TestimonialCard({
             fill
             sizes="48px"
             className="object-cover"
-            loading={index === 0 ? 'eager' : 'lazy'}
+            loading={index === 0 ? "eager" : "lazy"}
             placeholder="blur"
             blurDataURL="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDgiIGhlaWdodD0iNDgiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMjQiIGN5PSIyNCIgcj0iMjQiIGZpbGw9IiMxYTFhMmUiLz48L3N2Zz4="
           />
@@ -59,7 +59,10 @@ export default function TestimonialCard({
 
       {/* Region/Language Tags */}
       {(region || language) && (
-        <div className="flex flex-wrap gap-2" aria-label="Location and language information">
+        <div
+          className="flex flex-wrap gap-2"
+          aria-label="Location and language information"
+        >
           {region && (
             <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-[#e8b84b]/10 text-[#e8b84b] border border-[#e8b84b]/20">
               📍 {region}

@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Bell, X, Trash2, Check, ExternalLink } from "lucide-react";
+import { Bell, X, Trash2 } from "lucide-react";
 import { useNotifications } from "@/context/NotificationContext";
 import { formatDistanceToNow } from "date-fns";
 
@@ -16,13 +16,13 @@ export const NotificationsCenter: React.FC = () => {
   // Close on escape key and focus management
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && isOpen) {
+      if (e.key === "Escape" && isOpen) {
         setIsOpen(false);
       }
     };
 
     if (isOpen) {
-      document.addEventListener('keydown', handleKeyDown);
+      document.addEventListener("keydown", handleKeyDown);
       // Focus first notification when dropdown opens
       setTimeout(() => {
         firstNotificationRef.current?.focus();
@@ -30,7 +30,7 @@ export const NotificationsCenter: React.FC = () => {
     }
 
     return () => {
-      document.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener("keydown", handleKeyDown);
     };
   }, [isOpen]);
 
@@ -39,13 +39,16 @@ export const NotificationsCenter: React.FC = () => {
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="relative p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-        aria-label={`Notifications ${unreadCount > 0 ? `(${unreadCount} unread)` : ''}`}
+        aria-label={`Notifications ${unreadCount > 0 ? `(${unreadCount} unread)` : ""}`}
         aria-expanded={isOpen}
         aria-haspopup="true"
       >
         <Bell className="w-6 h-6" />
         {unreadCount > 0 && (
-          <span className="absolute top-0 right-0 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white ring-2 ring-white dark:ring-gray-900" aria-label={`${unreadCount} unread notifications`}>
+          <span
+            className="absolute top-0 right-0 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white ring-2 ring-white dark:ring-gray-900"
+            aria-label={`${unreadCount} unread notifications`}
+          >
             {unreadCount > 9 ? "9+" : unreadCount}
           </span>
         )}
@@ -68,7 +71,9 @@ export const NotificationsCenter: React.FC = () => {
               aria-label="Notifications"
             >
               <div className="flex items-center justify-between border-b border-white/5 p-5 bg-white/[0.02]">
-                <h3 className="font-display font-semibold text-lg text-white">Notifications</h3>
+                <h3 className="font-display font-semibold text-lg text-white">
+                  Notifications
+                </h3>
                 <div className="flex items-center gap-1">
                   {notifications.length > 0 && (
                     <button
@@ -90,9 +95,16 @@ export const NotificationsCenter: React.FC = () => {
 
               <div className="flex-grow overflow-y-auto p-3 space-y-2 custom-scrollbar">
                 {notifications.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center py-16 text-[var(--color-text-secondary)]" role="status" aria-live="polite">
+                  <div
+                    className="flex flex-col items-center justify-center py-16 text-[var(--color-text-secondary)]"
+                    role="status"
+                    aria-live="polite"
+                  >
                     <div className="relative mb-4">
-                      <Bell className="w-12 h-12 opacity-10" aria-hidden="true" />
+                      <Bell
+                        className="w-12 h-12 opacity-10"
+                        aria-hidden="true"
+                      />
                       <div className="absolute inset-0 bg-[#e8b84b]/5 blur-xl rounded-full" />
                     </div>
                     <p className="text-sm font-light">No new transmissions</p>
@@ -111,7 +123,7 @@ export const NotificationsCenter: React.FC = () => {
                       role="menuitem"
                       tabIndex={0}
                       onKeyDown={(e) => {
-                        if (e.key === 'Enter' || e.key === ' ') {
+                        if (e.key === "Enter" || e.key === " ") {
                           e.preventDefault();
                           markAsRead(n.id);
                         }
@@ -120,7 +132,9 @@ export const NotificationsCenter: React.FC = () => {
                       <div className="flex items-start justify-between gap-3">
                         <span
                           className={`text-sm leading-relaxed ${
-                            n.read ? "text-[var(--color-text-secondary)]" : "text-white font-medium"
+                            n.read
+                              ? "text-[var(--color-text-secondary)]"
+                              : "text-white font-medium"
                           }`}
                         >
                           {n.message}

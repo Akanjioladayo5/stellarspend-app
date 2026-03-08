@@ -3,20 +3,50 @@
 /**
  * Generate placeholder images for development
  * This script creates SVG placeholders that can be replaced with real images later
- * 
+ *
  * Usage: node scripts/generate-placeholders.js
  */
 
-const fs = require('fs');
-const path = require('path');
+import fs from "fs";
+import path from "path";
 
 const placeholders = [
-  { path: 'public/images/features/tracking.svg', width: 400, height: 300, text: 'Tracking' },
-  { path: 'public/images/features/budgets.svg', width: 400, height: 300, text: 'Budgets' },
-  { path: 'public/images/features/savings.svg', width: 400, height: 300, text: 'Savings' },
-  { path: 'public/images/avatars/maria.svg', width: 200, height: 200, text: 'MS' },
-  { path: 'public/images/avatars/james.svg', width: 200, height: 200, text: 'JC' },
-  { path: 'public/images/avatars/aisha.svg', width: 200, height: 200, text: 'AM' },
+  {
+    path: "public/images/features/tracking.svg",
+    width: 400,
+    height: 300,
+    text: "Tracking",
+  },
+  {
+    path: "public/images/features/budgets.svg",
+    width: 400,
+    height: 300,
+    text: "Budgets",
+  },
+  {
+    path: "public/images/features/savings.svg",
+    width: 400,
+    height: 300,
+    text: "Savings",
+  },
+  {
+    path: "public/images/avatars/maria.svg",
+    width: 200,
+    height: 200,
+    text: "MS",
+  },
+  {
+    path: "public/images/avatars/james.svg",
+    width: 200,
+    height: 200,
+    text: "JC",
+  },
+  {
+    path: "public/images/avatars/aisha.svg",
+    width: 200,
+    height: 200,
+    text: "AM",
+  },
 ];
 
 function generateSVG(width, height, text) {
@@ -33,25 +63,27 @@ function generateSVG(width, height, text) {
 </svg>`;
 }
 
-console.log('🎨 Generating placeholder images...\n');
+console.log("🎨 Generating placeholder images...\n");
 
 placeholders.forEach(({ path: filePath, width, height, text }) => {
   const dir = path.dirname(filePath);
-  
+
   // Create directory if it doesn't exist
   if (!fs.existsSync(dir)) {
     fs.mkdirSync(dir, { recursive: true });
     console.log(`📁 Created directory: ${dir}`);
   }
-  
+
   // Generate SVG content
   const svg = generateSVG(width, height, text);
-  
+
   // Write file
   fs.writeFileSync(filePath, svg);
   console.log(`✅ Generated: ${filePath} (${width}x${height})`);
 });
 
-console.log('\n✨ All placeholder images generated successfully!');
-console.log('\n📝 Note: Replace these SVG placeholders with actual images for production.');
-console.log('   Recommended formats: WebP, AVIF, or high-quality JPEG/PNG\n');
+console.log("\n✨ All placeholder images generated successfully!");
+console.log(
+  "\n📝 Note: Replace these SVG placeholders with actual images for production.",
+);
+console.log("   Recommended formats: WebP, AVIF, or high-quality JPEG/PNG\n");

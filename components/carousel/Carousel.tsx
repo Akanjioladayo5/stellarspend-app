@@ -65,7 +65,15 @@ export default function Carousel({
   function handleTouchEnd(e: React.TouchEvent) {
     if (touchStart === null) return;
     const delta = touchStart - e.changedTouches[0].clientX;
-    if (Math.abs(delta) > 40) delta > 0 ? next() : prev();
+
+    if (Math.abs(delta) > 40) {
+      if (delta > 0) {
+        next();
+      } else {
+        prev();
+      }
+    }
+
     setTouchStart(null);
   }
 
