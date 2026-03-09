@@ -34,7 +34,7 @@ export default function TestimonialCard({
     >
       {/* Quote */}
       <blockquote className="text-[#e8edf8] text-base leading-relaxed mb-6 italic flex-grow">
-        &quot;{quote}&quot;
+        &ldquo;{quote}&rdquo;
       </blockquote>
 
       {/* Author Info */}

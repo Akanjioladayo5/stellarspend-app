@@ -30,8 +30,10 @@ describe("User Journey: Landing → Wallet → Budget → Transaction", () => {
     cy.mockFreighter();
 
     cy.window().then((win) => {
-      const { freighter } = win;
+      const freighter = (win as typeof win & { freighter: unknown }).freighter;
       expect(freighter).to.exist;
+      void cy.wrap(freighter).invoke('getPublicKey').should('equal', 'GDQP2KPQGKIHYJGXNUIYOMHARUARCA7DJT5FO2FFOOKY3B2WSQHG4W37');
+      void cy.wrap(freighter).invoke('isConnected').should('equal', true);
     });
 
     cy.window()

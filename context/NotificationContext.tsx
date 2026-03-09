@@ -35,38 +35,47 @@ interface NotificationContextType {
   updatePreferences: (prefs: Partial<NotificationPreferences>) => void;
 }
 
-const NotificationContext = createContext<NotificationContextType | undefined>(
-  undefined,
-);
+export const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
 
 const STORAGE_KEY = "stellarspend_notifications";
 const PREFS_KEY = "stellarspend_notification_preferences";
 
-const DEFAULT_PREFERENCES: NotificationPreferences = {
-  success: true,
-  error: true,
-  info: true,
-};
-
-function loadNotifications(): Notification[] {
-  try {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    return saved ? (JSON.parse(saved) as Notification[]) : [];
-  } catch {
+export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [notifications, setNotifications] = useState<Notification[]>(() => {
+    // Initialize with saved notifications from localStorage
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        try {
+          return JSON.parse(saved);
+        } catch (e) {
+          console.error('Failed to parse saved notifications', e);
+        }
+      }
+    }
     return [];
-  }
-}
+  });
 
-function loadPreferences(): NotificationPreferences {
-  try {
-    const saved = localStorage.getItem(PREFS_KEY);
-    return saved
-      ? (JSON.parse(saved) as NotificationPreferences)
-      : DEFAULT_PREFERENCES;
-  } catch {
-    return DEFAULT_PREFERENCES;
-  }
-}
+  const [toasts, setToasts] = useState<Notification[]>([]);
+
+  const [preferences, setPreferences] = useState<NotificationPreferences>(() => {
+    // Initialize with saved preferences from localStorage
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem(PREFS_KEY);
+      if (saved) {
+        try {
+          return JSON.parse(saved);
+        } catch (e) {
+          console.error('Failed to parse saved preferences', e);
+        }
+      }
+    }
+    return {
+      success: true,
+      error: true,
+      info: true,
+    };
+  });
 
 export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
@@ -91,6 +100,28 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({
   const removeToast = useCallback((id: string) => {
     setToasts((prev) => prev.filter((t) => t.id !== id));
   }, []);
+
+  const addNotification = useCallback((type: NotificationType, message: string) => {
+    const newNotification: Notification = {
+      id: Math.random().toString(36).substring(2, 11),
+      type,
+      message,
+      timestamp: Date.now(),
+      read: false,
+    };
+
+    setNotifications((prev) => [newNotification, ...prev]);
+
+    // Only show toast if preference is enabled
+    if (preferences[type]) {
+      setToasts((prev) => [...prev, newNotification]);
+      
+      // Auto-remove toast after 5 seconds
+      setTimeout(() => {
+        removeToast(newNotification.id);
+      }, 5000);
+    }
+  }, [preferences, removeToast]);
 
   const addNotification = useCallback(
     (type: NotificationType, message: string) => {

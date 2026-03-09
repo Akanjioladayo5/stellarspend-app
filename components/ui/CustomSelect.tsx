@@ -14,6 +14,7 @@ export default function CustomSelect({
   value,
   onChange,
   options,
+  label: _label,
 }: CustomSelectProps) {
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);

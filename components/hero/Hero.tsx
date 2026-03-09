@@ -1,9 +1,9 @@
 "use client";
 
-import { motion } from "framer-motion";
-import { ArrowRight } from "lucide-react";
-import { useNotifications } from "@/context/NotificationContext";
-import { NotificationsCenter } from "@/components/notifications/NotificationsCenter";
+import { motion } from 'framer-motion';
+import { ArrowRight } from 'lucide-react';
+import { useNotifications } from '@/context/NotificationContext';
+import { NotificationsCenter } from '@/components/notifications/NotificationsCenter';
 
 import { Starfield } from "@/components/ui/Starfield";
 

@@ -7,6 +7,7 @@ import {
   Copy,
   ExternalLink,
   Download,
+  ArrowDownLeft,
   Clock,
   Hash,
   FileText,
@@ -291,7 +292,7 @@ export default function TransactionDrawer({
                         </span>
                       </div>
                       <p className="text-sm text-[#e8edf8] italic relative z-10 pl-2 border-l-2 border-[#e8b84b]/30">
-                        &quot;{transaction.memo}&quot;
+                        &ldquo;{transaction.memo}&rdquo;
                       </p>
                     </div>
                   )}

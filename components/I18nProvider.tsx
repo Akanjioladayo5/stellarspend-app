@@ -1,10 +1,10 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useState } from "react";
-import i18next from "i18next";
-import { initReactI18next } from "react-i18next";
-import commonEn from "@/locales/en/common.json";
-import commonEs from "@/locales/es/common.json";
+import React, { createContext, useContext, useEffect, useState } from 'react';
+import i18next from 'i18next';
+import { initReactI18next } from 'react-i18next';
+import commonEn from '@/locales/en/common.json';
+import commonEs from '@/locales/es/common.json';
 
 // Initialize i18next
 i18next.use(initReactI18next).init({
@@ -47,22 +47,17 @@ export const I18nProvider: React.FC<I18nProviderProps> = ({
   children,
   initialLanguage = "en",
 }) => {
-  const [language, setLanguage] = useState<string>(() => {
-    if (typeof window !== "undefined") {
-      return localStorage.getItem("stellarspend_language") || initialLanguage;
+  const [language, setLanguage] = useState(() => {
+    // Initialize language from localStorage or default
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('stellarspend_language') || initialLanguage;
     }
     return initialLanguage;
   });
 
-  const [isReady, setIsReady] = useState(false);
-
   useEffect(() => {
-    const init = async () => {
-      await i18next.changeLanguage(language);
-      setIsReady(true);
-    };
-
-    init();
+    // Set i18next language when language changes
+    i18next.changeLanguage(language);
   }, [language]);
 
   const changeLanguage = async (lng: string) => {
@@ -76,18 +71,17 @@ export const I18nProvider: React.FC<I18nProviderProps> = ({
 
   const t = (key: string): string => {
     let value: string = i18next.t(key);
-
-    if (value === key && language !== "en") {
-      const previousLng = i18next.language;
-      i18next.changeLanguage("en");
+    
+    // Fallback to English if translation not found
+    if (value === key && language !== 'en') {
+      const savedLng = i18next.language;
+      i18next.language = 'en';
       value = i18next.t(key);
       i18next.changeLanguage(previousLng);
     }
 
     return value || key;
   };
-
-  if (!isReady) return null;
 
   return (
     <I18nContext.Provider value={{ language, changeLanguage, t }}>

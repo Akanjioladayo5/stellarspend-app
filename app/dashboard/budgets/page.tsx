@@ -10,91 +10,101 @@ import {
 } from "@/lib/api/client";
 import BudgetForm from "@/components/budgets/BudgetForm";
 
+interface BudgetFormData {
+  name: string;
+  amount: number;
+  category: string;
+  asset: 'XLM' | 'USDC' | 'EURC';
+  startDate: string;
+  endDate: string;
+}
+
 export default function BudgetsPage() {
-  const [budgets, setBudgets] = useState<Budget[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [showForm, setShowForm] = useState(false);
-  const [editingBudget, setEditingBudget] = useState<Budget | null>(null);
+    const [budgets, setBudgets] = useState<Budget[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+    const [showForm, setShowForm] = useState(false);
+    const [editingBudget, setEditingBudget] = useState<Budget | null>(null);
 
-  useEffect(() => {
-    loadBudgets();
-  }, []);
+    useEffect(() => {
+        loadBudgets();
+    }, []);
 
-  const loadBudgets = async () => {
-    try {
-      setLoading(true);
-      const data = await fetchBudgets();
-      setBudgets(data);
-      setError(null);
-    } catch (err) {
-      setError("Failed to load budgets");
-      console.error("Error loading budgets:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
+    const loadBudgets = async () => {
+        try {
+            setLoading(true);
+            const data = await fetchBudgets();
+            setBudgets(data);
+            setError(null);
+        } catch (err) {
+            setError('Failed to load budgets');
+            console.error('Error loading budgets:', err);
+        } finally {
+            setLoading(false);
+        }
+    };
 
-  const handleCreateBudget = async (
-    budgetData: Omit<Budget, "id" | "createdAt" | "updatedAt">,
-  ) => {
-    try {
-      const newBudget = await createBudget(budgetData);
-      setBudgets((prev) => [...prev, newBudget]);
-      setShowForm(false);
-    } catch (err) {
-      setError("Failed to create budget");
-      console.error("Error creating budget:", err);
-    }
-  };
+    const handleCreateBudget = async (budgetData: Omit<Budget, 'id' | 'createdAt' | 'updatedAt'>) => {
+        try {
+            const newBudget = await createBudget(budgetData);
+            setBudgets(prev => [...prev, newBudget]);
+            setShowForm(false);
+        } catch (err) {
+            setError('Failed to create budget');
+            console.error('Error creating budget:', err);
+        }
+    };
 
-  const handleUpdateBudget = async (
-    budgetData: Omit<Budget, "id" | "createdAt" | "updatedAt">,
-  ) => {
-    if (!editingBudget) return;
+    const handleUpdateBudget = async (budgetData: Omit<Budget, 'id' | 'createdAt' | 'updatedAt'>) => {
+        if (!editingBudget) return;
+        
+        try {
+            const updatedBudget = await updateBudget(editingBudget.id, budgetData);
+            setBudgets(prev => prev.map(b => b.id === editingBudget.id ? updatedBudget : b));
+            setEditingBudget(null);
+            setShowForm(false);
+        } catch (err) {
+            setError('Failed to update budget');
+            console.error('Error updating budget:', err);
+        }
+    };
 
-    try {
-      const updatedBudget = await updateBudget(editingBudget.id, budgetData);
-      setBudgets((prev) =>
-        prev.map((b) => (b.id === editingBudget.id ? updatedBudget : b)),
-      );
-      setEditingBudget(null);
-      setShowForm(false);
-    } catch (err) {
-      setError("Failed to update budget");
-      console.error("Error updating budget:", err);
-    }
-  };
+    const handleDeleteBudget = async (id: string) => {
+        if (!confirm('Are you sure you want to delete this budget?')) return;
+        
+        try {
+            await deleteBudget(id);
+            setBudgets(prev => prev.filter(b => b.id !== id));
+        } catch (err) {
+            setError('Failed to delete budget');
+            console.error('Error deleting budget:', err);
+        }
+    };
 
-  const handleDeleteBudget = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this budget?")) return;
+    const handleEditBudget = (budget: Budget) => {
+        setEditingBudget(budget);
+        setShowForm(true);
+    };
 
-    try {
-      await deleteBudget(id);
-      setBudgets((prev) => prev.filter((b) => b.id !== id));
-    } catch (err) {
-      setError("Failed to delete budget");
-      console.error("Error deleting budget:", err);
-    }
-  };
+    const handleCancelForm = () => {
+        setShowForm(false);
+        setEditingBudget(null);
+    };
 
-  const handleEditBudget = (budget: Budget) => {
-    setEditingBudget(budget);
-    setShowForm(true);
-  };
+    const handleSubmit = (data: BudgetFormData) => {
+        if (editingBudget) {
+            handleUpdateBudget(data);
+        } else {
+            handleCreateBudget(data);
+        }
+    };
 
-  const handleCancelForm = () => {
-    setShowForm(false);
-    setEditingBudget(null);
-  };
-
-  const handleSubmit = (
-    data: Omit<Budget, "id" | "createdAt" | "updatedAt">,
-  ) => {
-    if (editingBudget) {
-      handleUpdateBudget(data);
-    } else {
-      handleCreateBudget(data);
+    if (loading) {
+        return (
+            <div className="flex items-center justify-center min-h-screen">
+                <div className="text-gray-600">Loading budgets...</div>
+            </div>
+        );
     }
   };
 

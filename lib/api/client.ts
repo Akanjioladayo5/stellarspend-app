@@ -50,7 +50,6 @@ export interface Budget {
   createdAt: string;
   updatedAt: string;
 }
-
 export interface FilterParams {
   dateFrom?: string;
   dateTo?: string;

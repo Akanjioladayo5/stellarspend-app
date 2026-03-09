@@ -4,8 +4,8 @@ import {
   UseFormProps as UseHookFormProps,
   UseFormReturn,
   FieldValues,
-} from "react-hook-form";
-import { z } from "zod";
+} from 'react-hook-form';
+import { z } from 'zod';
 
 /**
  * Configuration options for the useForm hook.

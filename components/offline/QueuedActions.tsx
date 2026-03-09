@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { Send, Download, PieChart, Target, X } from "lucide-react";
+import React, { useState } from 'react';
+import { useOffline, QueuedAction } from './OfflineProvider';
+import { RefreshCw, Trash2, Clock, History } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 // Module-level constant — Math.random() runs once when the module loads,
 // never during a component render, so the react-hooks/purity rule is satisfied.
