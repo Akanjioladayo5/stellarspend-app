@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import React from 'react';
-import { z } from 'zod';
-import { useForm } from '@/hooks/useForm';
-import { useOffline } from '@/components/offline/OfflineProvider';
+import React from "react";
+import { z } from "zod";
+import { useForm } from "@/hooks/useForm";
+import { useOffline } from "@/components/offline/OfflineProvider";
 
 const goalSchema = z.object({
     title: z.string().min(1, 'Goal title is required').max(100, 'Title is too long'),
@@ -165,5 +165,15 @@ export default function GoalForm({ open, onOpenChange, onGoalCreated }: GoalForm
                 </form>
             </div>
         </div>
-    );
+
+        <button
+          type="submit"
+          disabled={!isValid || isSubmitting}
+          className="w-full mt-6 px-6 py-3 bg-green-600 hover:bg-green-700 disabled:bg-green-300 text-white font-semibold rounded-lg shadow-md transition-colors duration-200"
+        >
+          {isSubmitting ? "Creating..." : "Create Goal"}
+        </button>
+      </form>
+    </div>
+  );
 }

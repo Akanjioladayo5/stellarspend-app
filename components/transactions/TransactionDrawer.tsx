@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useRef } from "react";
+import { useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   X,
@@ -14,6 +14,7 @@ import {
   Tag,
   CheckCircle2,
   AlertCircle,
+  ArrowDownLeft,
 } from "lucide-react";
 
 interface Operation {

@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import i18next from 'i18next';
@@ -12,17 +12,16 @@ i18next.use(initReactI18next).init({
     en: { translation: commonEn },
     es: { translation: commonEs },
   },
-  lng: 'en', // Default language
-  fallbackLng: 'en',
+  lng: "en",
+  fallbackLng: "en",
   interpolation: {
-    escapeValue: false, // React already escapes values
+    escapeValue: false,
   },
   react: {
     useSuspense: false,
   },
 });
 
-// Create context for language management
 interface I18nContextType {
   language: string;
   changeLanguage: (lng: string) => Promise<void>;
@@ -34,7 +33,7 @@ const I18nContext = createContext<I18nContextType | undefined>(undefined);
 export const useI18n = () => {
   const context = useContext(I18nContext);
   if (!context) {
-    throw new Error('useI18n must be used within an I18nProvider');
+    throw new Error("useI18n must be used within an I18nProvider");
   }
   return context;
 };
@@ -44,9 +43,9 @@ interface I18nProviderProps {
   initialLanguage?: string;
 }
 
-export const I18nProvider: React.FC<I18nProviderProps> = ({ 
-  children, 
-  initialLanguage = 'en' 
+export const I18nProvider: React.FC<I18nProviderProps> = ({
+  children,
+  initialLanguage = "en",
 }) => {
   const [language, setLanguage] = useState(() => {
     // Initialize language from localStorage or default
@@ -64,10 +63,9 @@ export const I18nProvider: React.FC<I18nProviderProps> = ({
   const changeLanguage = async (lng: string) => {
     await i18next.changeLanguage(lng);
     setLanguage(lng);
-    
-    // Persist language preference
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('stellarspend_language', lng);
+
+    if (typeof window !== "undefined") {
+      localStorage.setItem("stellarspend_language", lng);
     }
   };
 
@@ -79,9 +77,9 @@ export const I18nProvider: React.FC<I18nProviderProps> = ({
       const savedLng = i18next.language;
       i18next.language = 'en';
       value = i18next.t(key);
-      i18next.language = savedLng;
+      i18next.changeLanguage(previousLng);
     }
-    
+
     return value || key;
   };
 

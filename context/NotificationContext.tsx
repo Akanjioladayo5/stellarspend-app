@@ -1,6 +1,12 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+} from "react";
 
 export type NotificationType = "success" | "error" | "info";
 
@@ -71,12 +77,22 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     };
   });
 
-  // Save notifications to localStorage
+export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
+  // Lazy initialisers read localStorage once on mount — no setState inside effects
+  const [notifications, setNotifications] =
+    useState<Notification[]>(loadNotifications);
+  const [toasts, setToasts] = useState<Notification[]>([]);
+  const [preferences, setPreferences] =
+    useState<NotificationPreferences>(loadPreferences);
+
+  // Persist notifications to localStorage whenever they change
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(notifications));
   }, [notifications]);
 
-  // Save preferences to localStorage
+  // Persist preferences to localStorage whenever they change
   useEffect(() => {
     localStorage.setItem(PREFS_KEY, JSON.stringify(preferences));
   }, [preferences]);
@@ -107,9 +123,32 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     }
   }, [preferences, removeToast]);
 
+  const addNotification = useCallback(
+    (type: NotificationType, message: string) => {
+      const newNotification: Notification = {
+        id: Math.random().toString(36).substring(2, 11),
+        type,
+        message,
+        timestamp: Date.now(),
+        read: false,
+      };
+
+      setNotifications((prev) => [newNotification, ...prev]);
+
+      if (preferences[type]) {
+        setToasts((prev) => [...prev, newNotification]);
+
+        setTimeout(() => {
+          removeToast(newNotification.id);
+        }, 5000);
+      }
+    },
+    [preferences, removeToast],
+  );
+
   const markAsRead = useCallback((id: string) => {
     setNotifications((prev) =>
-      prev.map((n) => (n.id === id ? { ...n, read: true } : n))
+      prev.map((n) => (n.id === id ? { ...n, read: true } : n)),
     );
   }, []);
 
@@ -117,9 +156,12 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     setNotifications([]);
   }, []);
 
-  const updatePreferences = useCallback((newPrefs: Partial<NotificationPreferences>) => {
-    setPreferences((prev) => ({ ...prev, ...newPrefs }));
-  }, []);
+  const updatePreferences = useCallback(
+    (newPrefs: Partial<NotificationPreferences>) => {
+      setPreferences((prev) => ({ ...prev, ...newPrefs }));
+    },
+    [],
+  );
 
   return (
     <NotificationContext.Provider
@@ -142,7 +184,9 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
 export const useNotifications = () => {
   const context = useContext(NotificationContext);
   if (context === undefined) {
-    throw new Error("useNotifications must be used within a NotificationProvider");
+    throw new Error(
+      "useNotifications must be used within a NotificationProvider",
+    );
   }
   return context;
 };

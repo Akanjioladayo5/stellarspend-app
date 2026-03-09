@@ -1,27 +1,35 @@
-'use client';
+"use client";
 
-import React from 'react';
-import { z } from 'zod';
-import { useForm } from '@/hooks/useForm';
-import { useOffline } from '@/components/offline/OfflineProvider';
-import { Budget } from '@/lib/api/client';
+import React from "react";
+import { z } from "zod";
+import { useForm } from "@/hooks/useForm";
+import { useOffline } from "@/components/offline/OfflineProvider";
+import { Budget } from "@/lib/api/client";
 
-const budgetSchema = z.object({
-    name: z.string().min(1, 'Budget name is required').max(50, 'Name is too long'),
+const budgetSchema = z
+  .object({
+    name: z
+      .string()
+      .min(1, "Budget name is required")
+      .max(50, "Name is too long"),
     amount: z.coerce
-        .number()
-        .positive('Amount must be positive')
-        .min(0.01, 'Minimum amount is 0.01'),
-    category: z.string().min(1, 'Category is required'),
-    asset: z.enum(['XLM', 'USDC', 'EURC'], {
-        message: 'Please select a valid asset',
+      .number()
+      .positive("Amount must be positive")
+      .min(0.01, "Minimum amount is 0.01"),
+    category: z.string().min(1, "Category is required"),
+    asset: z.enum(["XLM", "USDC", "EURC"], {
+      message: "Please select a valid asset",
     }),
-    startDate: z.string().min(1, 'Start date is required'),
-    endDate: z.string().min(1, 'End date is required'),
-}).refine((data) => new Date(data.endDate) >= new Date(data.startDate), {
-    message: 'End date must be after start date',
-    path: ['endDate'],
-});
+    period: z.enum(["daily", "monthly", "quarterly"], {
+      message: "Please select a valid period",
+    }),
+    startDate: z.string().min(1, "Start date is required"),
+    endDate: z.string().min(1, "End date is required"),
+  })
+  .refine((data) => new Date(data.endDate) >= new Date(data.startDate), {
+    message: "End date must be after start date",
+    path: ["endDate"],
+  });
 
 type BudgetFormData = z.infer<typeof budgetSchema>;
 
@@ -203,5 +211,12 @@ export default function BudgetForm({ onSubmit, onCancel, initialData, isEditing 
                 )}
             </form>
         </div>
-    );
+        {(!isValid || isSubmitting) && (
+          <p id="submit-help" className="text-xs text-gray-500 mt-1">
+            Please fill all required fields correctly before submitting.
+          </p>
+        )}
+      </form>
+    </div>
+  );
 }

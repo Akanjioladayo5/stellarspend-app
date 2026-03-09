@@ -1,8 +1,14 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect } from 'react';
-import { fetchBudgets, createBudget, updateBudget, deleteBudget, Budget } from '@/lib/api/client';
-import BudgetForm from '@/components/budgets/BudgetForm';
+import { useState, useEffect } from "react";
+import {
+  fetchBudgets,
+  createBudget,
+  updateBudget,
+  deleteBudget,
+  Budget,
+} from "@/lib/api/client";
+import BudgetForm from "@/components/budgets/BudgetForm";
 
 interface BudgetFormData {
   name: string;
@@ -100,110 +106,128 @@ export default function BudgetsPage() {
             </div>
         );
     }
+  };
 
+  if (loading) {
     return (
-        <div className="p-6 max-w-6xl mx-auto">
-            <div className="flex justify-between items-center mb-6">
-                <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Budgets</h1>
-                <button
-                    onClick={() => setShowForm(true)}
-                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors"
-                >
-                    Create Budget
-                </button>
-            </div>
-
-            {error && (
-                <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
-                    <p className="text-red-600">{error}</p>
-                </div>
-            )}
-
-            {showForm && (
-                <div className="mb-6">
-                    <div className="flex justify-between items-center mb-4">
-                        <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-                            {editingBudget ? 'Edit Budget' : 'Create New Budget'}
-                        </h2>
-                        <button
-                            onClick={handleCancelForm}
-                            className="text-gray-500 hover:text-gray-700"
-                        >
-                            Cancel
-                        </button>
-                    </div>
-                    <BudgetForm 
-                        onSubmit={handleSubmit}
-                        onCancel={handleCancelForm}
-                        initialData={editingBudget}
-                        isEditing={!!editingBudget}
-                    />
-                </div>
-            )}
-
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {budgets.map((budget) => (
-                    <div
-                        key={budget.id}
-                        className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 border border-gray-200 dark:border-gray-700"
-                    >
-                        <div className="flex justify-between items-start mb-4">
-                            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                                {budget.name}
-                            </h3>
-                            <div className="flex space-x-2">
-                                <button
-                                    onClick={() => handleEditBudget(budget)}
-                                    className="text-blue-600 hover:text-blue-700 text-sm"
-                                >
-                                    Edit
-                                </button>
-                                <button
-                                    onClick={() => handleDeleteBudget(budget.id)}
-                                    className="text-red-600 hover:text-red-700 text-sm"
-                                >
-                                    Delete
-                                </button>
-                            </div>
-                        </div>
-                        
-                        <div className="space-y-2">
-                            <div className="flex justify-between">
-                                <span className="text-gray-600 dark:text-gray-400">Amount:</span>
-                                <span className="font-medium text-gray-900 dark:text-white">
-                                    {budget.amount} {budget.asset}
-                                </span>
-                            </div>
-                            
-                            <div className="flex justify-between">
-                                <span className="text-gray-600 dark:text-gray-400">Category:</span>
-                                <span className="capitalize text-gray-900 dark:text-white">
-                                    {budget.category}
-                                </span>
-                            </div>
-                            
-                            <div className="flex justify-between">
-                                <span className="text-gray-600 dark:text-gray-400">Period:</span>
-                                <span className="text-gray-900 dark:text-white">
-                                    {new Date(budget.startDate).toLocaleDateString()} - {new Date(budget.endDate).toLocaleDateString()}
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-                ))}
-            </div>
-
-            {budgets.length === 0 && !showForm && (
-                <div className="text-center py-12">
-                    <div className="text-gray-500 mb-4">No budgets found</div>
-                    <button
-                        onClick={() => setShowForm(true)}
-                        className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors"
-                    >
-                        Create your first budget
-                    </button>
-                </div>
-            )}
-        </div>
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-gray-600">Loading budgets...</div>
+      </div>
     );
+  }
+
+  return (
+    <div className="p-6 max-w-6xl mx-auto">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+          Budgets
+        </h1>
+        <button
+          onClick={() => setShowForm(true)}
+          className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors"
+        >
+          Create Budget
+        </button>
+      </div>
+
+      {error && (
+        <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+          <p className="text-red-600">{error}</p>
+        </div>
+      )}
+
+      {showForm && (
+        <div className="mb-6">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+              {editingBudget ? "Edit Budget" : "Create New Budget"}
+            </h2>
+            <button
+              onClick={handleCancelForm}
+              className="text-gray-500 hover:text-gray-700"
+            >
+              Cancel
+            </button>
+          </div>
+          <BudgetForm
+            onSubmit={handleSubmit}
+            onCancel={handleCancelForm}
+            initialData={editingBudget}
+            isEditing={!!editingBudget}
+          />
+        </div>
+      )}
+
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        {budgets.map((budget) => (
+          <div
+            key={budget.id}
+            className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 border border-gray-200 dark:border-gray-700"
+          >
+            <div className="flex justify-between items-start mb-4">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                {budget.name}
+              </h3>
+              <div className="flex space-x-2">
+                <button
+                  onClick={() => handleEditBudget(budget)}
+                  className="text-blue-600 hover:text-blue-700 text-sm"
+                >
+                  Edit
+                </button>
+                <button
+                  onClick={() => handleDeleteBudget(budget.id)}
+                  className="text-red-600 hover:text-red-700 text-sm"
+                >
+                  Delete
+                </button>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex justify-between">
+                <span className="text-gray-600 dark:text-gray-400">
+                  Amount:
+                </span>
+                <span className="font-medium text-gray-900 dark:text-white">
+                  {budget.amount} {budget.asset}
+                </span>
+              </div>
+
+              <div className="flex justify-between">
+                <span className="text-gray-600 dark:text-gray-400">
+                  Category:
+                </span>
+                <span className="capitalize text-gray-900 dark:text-white">
+                  {budget.category}
+                </span>
+              </div>
+
+              <div className="flex justify-between">
+                <span className="text-gray-600 dark:text-gray-400">
+                  Period:
+                </span>
+                <span className="text-gray-900 dark:text-white">
+                  {new Date(budget.startDate).toLocaleDateString()} -{" "}
+                  {new Date(budget.endDate).toLocaleDateString()}
+                </span>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {budgets.length === 0 && !showForm && (
+        <div className="text-center py-12">
+          <div className="text-gray-500 mb-4">No budgets found</div>
+          <button
+            onClick={() => setShowForm(true)}
+            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors"
+          >
+            Create your first budget
+          </button>
+        </div>
+      )}
+    </div>
+  );
 }
