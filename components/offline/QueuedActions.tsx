@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { useOffline, QueuedAction } from './OfflineProvider';
-import { RefreshCw, Trash2, Clock, History } from 'lucide-react';
+import { RefreshCw, Trash2, Clock, History, X, Send, Download, PieChart, Target } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 // Module-level constant — Math.random() runs once when the module loads,

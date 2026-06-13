@@ -14,7 +14,6 @@ import {
   Tag,
   CheckCircle2,
   AlertCircle,
-  ArrowDownLeft,
 } from "lucide-react";
 
 interface Operation {

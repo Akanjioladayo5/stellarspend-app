@@ -71,13 +71,13 @@ export const I18nProvider: React.FC<I18nProviderProps> = ({
 
   const t = (key: string): string => {
     let value: string = i18next.t(key);
-    
+
     // Fallback to English if translation not found
     if (value === key && language !== 'en') {
       const savedLng = i18next.language;
       i18next.language = 'en';
       value = i18next.t(key);
-      i18next.changeLanguage(previousLng);
+      i18next.changeLanguage(savedLng);
     }
 
     return value || key;

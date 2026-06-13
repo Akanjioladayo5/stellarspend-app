@@ -2,7 +2,7 @@
 
 import BudgetForm from '@/components/budgets/BudgetForm';
 import GoalForm from '@/components/savings/GoalForm';
-import { Card, CardHeader, CardBody } from '@/components/ui/card';
+import { Card, CardHeader, CardBody } from '@/components/ui/Card';
 import { Grid } from '@/components/ui/Grid';
 
 export default function TestFormsPage() {

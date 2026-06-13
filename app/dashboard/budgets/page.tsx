@@ -106,17 +106,8 @@ export default function BudgetsPage() {
             </div>
         );
     }
-  };
 
-  if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-gray-600">Loading budgets...</div>
-      </div>
-    );
-  }
-
-  return (
     <div className="p-6 max-w-6xl mx-auto">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold text-gray-900 dark:text-white">

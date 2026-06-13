@@ -211,12 +211,5 @@ export default function BudgetForm({ onSubmit, onCancel, initialData, isEditing 
                 )}
             </form>
         </div>
-        {(!isValid || isSubmitting) && (
-          <p id="submit-help" className="text-xs text-gray-500 mt-1">
-            Please fill all required fields correctly before submitting.
-          </p>
-        )}
-      </form>
-    </div>
-  );
+    );
 }

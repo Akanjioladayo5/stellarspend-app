@@ -40,88 +40,78 @@ export const NotificationContext = createContext<NotificationContextType | undef
 const STORAGE_KEY = "stellarspend_notifications";
 const PREFS_KEY = "stellarspend_notification_preferences";
 
-export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [notifications, setNotifications] = useState<Notification[]>(() => {
-    // Initialize with saved notifications from localStorage
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) {
-        try {
-          return JSON.parse(saved);
-        } catch (e) {
-          console.error('Failed to parse saved notifications', e);
-        }
-      }
-    }
+function loadNotifications(): Notification[] {
+  if (typeof window === "undefined") {
     return [];
-  });
+  }
 
-  const [toasts, setToasts] = useState<Notification[]>([]);
+  const saved = localStorage.getItem(STORAGE_KEY);
+  if (!saved) {
+    return [];
+  }
 
-  const [preferences, setPreferences] = useState<NotificationPreferences>(() => {
-    // Initialize with saved preferences from localStorage
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem(PREFS_KEY);
-      if (saved) {
-        try {
-          return JSON.parse(saved);
-        } catch (e) {
-          console.error('Failed to parse saved preferences', e);
-        }
-      }
-    }
+  try {
+    return JSON.parse(saved) as Notification[];
+  } catch (error) {
+    console.error("Failed to parse saved notifications", error);
+    return [];
+  }
+}
+
+function loadPreferences(): NotificationPreferences {
+  if (typeof window === "undefined") {
     return {
       success: true,
       error: true,
       info: true,
     };
-  });
+  }
+
+  const saved = localStorage.getItem(PREFS_KEY);
+  if (!saved) {
+    return {
+      success: true,
+      error: true,
+      info: true,
+    };
+  }
+
+  try {
+    return JSON.parse(saved) as NotificationPreferences;
+  } catch (error) {
+    console.error("Failed to parse saved preferences", error);
+    return {
+      success: true,
+      error: true,
+      info: true,
+    };
+  }
+}
 
 export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
-  // Lazy initialisers read localStorage once on mount — no setState inside effects
   const [notifications, setNotifications] =
     useState<Notification[]>(loadNotifications);
   const [toasts, setToasts] = useState<Notification[]>([]);
   const [preferences, setPreferences] =
     useState<NotificationPreferences>(loadPreferences);
 
-  // Persist notifications to localStorage whenever they change
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(notifications));
+    if (typeof window !== "undefined") {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(notifications));
+    }
   }, [notifications]);
 
-  // Persist preferences to localStorage whenever they change
   useEffect(() => {
-    localStorage.setItem(PREFS_KEY, JSON.stringify(preferences));
+    if (typeof window !== "undefined") {
+      localStorage.setItem(PREFS_KEY, JSON.stringify(preferences));
+    }
   }, [preferences]);
 
   const removeToast = useCallback((id: string) => {
-    setToasts((prev) => prev.filter((t) => t.id !== id));
+    setToasts((prev) => prev.filter((toast) => toast.id !== id));
   }, []);
-
-  const addNotification = useCallback((type: NotificationType, message: string) => {
-    const newNotification: Notification = {
-      id: Math.random().toString(36).substring(2, 11),
-      type,
-      message,
-      timestamp: Date.now(),
-      read: false,
-    };
-
-    setNotifications((prev) => [newNotification, ...prev]);
-
-    // Only show toast if preference is enabled
-    if (preferences[type]) {
-      setToasts((prev) => [...prev, newNotification]);
-      
-      // Auto-remove toast after 5 seconds
-      setTimeout(() => {
-        removeToast(newNotification.id);
-      }, 5000);
-    }
-  }, [preferences, removeToast]);
 
   const addNotification = useCallback(
     (type: NotificationType, message: string) => {
@@ -148,7 +138,9 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const markAsRead = useCallback((id: string) => {
     setNotifications((prev) =>
-      prev.map((n) => (n.id === id ? { ...n, read: true } : n)),
+      prev.map((notification) =>
+        notification.id === id ? { ...notification, read: true } : notification,
+      ),
     );
   }, []);
 
