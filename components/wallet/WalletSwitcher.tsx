@@ -44,7 +44,10 @@ export default function WalletSwitcher({
   const [editName, setEditName] = useState("");
   const [newWalletName, setNewWalletName] = useState("");
   const [newWalletAddress, setNewWalletAddress] = useState("");
+  const [focusedIndex, setFocusedIndex] = useState(0);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const itemRefs = useRef<Array<HTMLDivElement | null>>([]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -58,22 +61,111 @@ export default function WalletSwitcher({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Close dropdown on escape key
-  useEffect(() => {
-    const handleEsc = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        setIsOpen(false);
-        setIsAdding(false);
-        setEditingId(null);
-      }
-    };
-    window.addEventListener("keydown", handleEsc);
-    return () => window.removeEventListener("keydown", handleEsc);
-  }, []);
-
   const handleSelect = (id: string) => {
     selectWallet(id);
     setIsOpen(false);
+  };
+
+  const toggleMenu = () => {
+    const nextOpen = !isOpen;
+    setIsOpen(nextOpen);
+
+    if (nextOpen) {
+      requestAnimationFrame(() => {
+        if (wallets.length === 0) return;
+
+        const selectedIndex = wallets.findIndex((wallet) => wallet.id === selectedWallet?.id);
+        focusOption(selectedIndex >= 0 ? selectedIndex : 0);
+      });
+    }
+  };
+
+  const focusOption = (index: number) => {
+    if (wallets.length === 0) return;
+
+    const normalizedIndex = ((index % wallets.length) + wallets.length) % wallets.length;
+    setFocusedIndex(normalizedIndex);
+    itemRefs.current[normalizedIndex]?.focus();
+  };
+
+  const handleOpenMenu = () => {
+    setIsOpen(true);
+    requestAnimationFrame(() => {
+      if (wallets.length === 0) return;
+
+      const selectedIndex = wallets.findIndex((wallet) => wallet.id === selectedWallet?.id);
+      focusOption(selectedIndex >= 0 ? selectedIndex : 0);
+    });
+  };
+
+  const handleTriggerKeyDown = (e: React.KeyboardEvent<HTMLButtonElement>) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      if (!isOpen) {
+        handleOpenMenu();
+      } else {
+        setIsOpen(false);
+      }
+      return;
+    }
+
+    if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+      e.preventDefault();
+      if (!isOpen) {
+        handleOpenMenu();
+      }
+      focusOption(e.key === "ArrowDown" ? 0 : wallets.length - 1);
+      return;
+    }
+
+    if (e.key === "Escape") {
+      e.preventDefault();
+      setIsOpen(false);
+      setIsAdding(false);
+      setEditingId(null);
+    }
+  };
+
+  const handleMenuKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      focusOption(focusedIndex + 1);
+      return;
+    }
+
+    if (e.key === "ArrowUp") {
+      e.preventDefault();
+      focusOption(focusedIndex - 1);
+      return;
+    }
+
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      const wallet = wallets[focusedIndex];
+      if (wallet) {
+        handleSelect(wallet.id);
+      }
+      return;
+    }
+
+    if (e.key === "Escape") {
+      e.preventDefault();
+      setIsOpen(false);
+      setIsAdding(false);
+      setEditingId(null);
+      triggerRef.current?.focus();
+      return;
+    }
+
+    if (e.key === "Tab") {
+      setIsOpen(false);
+    }
+  };
+
+  const handleMenuBlur = (e: React.FocusEvent<HTMLDivElement>) => {
+    if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+      setIsOpen(false);
+    }
   };
 
   const handleRemove = (e: React.MouseEvent, id: string) => {
@@ -138,7 +230,14 @@ export default function WalletSwitcher({
   if (variant === "minimal") {
     return (
       <button
-        onClick={() => setIsOpen(!isOpen)}
+        ref={triggerRef}
+        type="button"
+        onClick={toggleMenu}
+        onKeyDown={handleTriggerKeyDown}
+        aria-haspopup="menu"
+        aria-expanded={isOpen}
+        aria-controls="wallet-switcher-menu"
+        aria-label="Toggle wallet switcher"
         className={`flex items-center gap-2 px-3 py-2 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all ${className}`}
       >
         <Wallet className="w-4 h-4 text-[#e8b84b]" />
@@ -154,8 +253,15 @@ export default function WalletSwitcher({
     <div ref={dropdownRef} className={`relative ${className}`}>
       {/* Trigger Button */}
       <button
-        onClick={() => setIsOpen(!isOpen)}
+        ref={triggerRef}
+        type="button"
+        onClick={toggleMenu}
+        onKeyDown={handleTriggerKeyDown}
         disabled={isLoading}
+        aria-haspopup="menu"
+        aria-expanded={isOpen}
+        aria-controls="wallet-switcher-menu"
+        aria-label="Wallet switcher"
         className={`flex items-center gap-3 w-full text-left transition-all ${
           variant === "compact"
             ? "px-3 py-2 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10"
@@ -204,7 +310,14 @@ export default function WalletSwitcher({
             transition={{ duration: 0.15 }}
             className="absolute top-full left-0 right-0 mt-2 z-50"
           >
-            <div className="bg-[#0d1221] border border-white/10 rounded-2xl shadow-2xl shadow-black/50 overflow-hidden">
+            <div
+              id="wallet-switcher-menu"
+              role="menu"
+              aria-label="Wallet options"
+              onKeyDown={handleMenuKeyDown}
+              onBlur={handleMenuBlur}
+              className="bg-[#0d1221] border border-white/10 rounded-2xl shadow-2xl shadow-black/50 overflow-hidden"
+            >
               {/* Header */}
               <div className="px-4 py-3 border-b border-white/5 flex items-center justify-between">
                 <span className="text-xs font-bold text-[#7a8aaa] uppercase tracking-wider">
@@ -222,13 +335,25 @@ export default function WalletSwitcher({
 
               {/* Wallet List */}
               <div className="max-h-80 overflow-y-auto">
-                {wallets.map((wallet) => (
+                {wallets.map((wallet, index) => (
                   <div
                     key={wallet.id}
+                    ref={(node) => {
+                      itemRefs.current[index] = node;
+                    }}
+                    role="menuitemradio"
+                    aria-checked={selectedWallet?.id === wallet.id}
+                    tabIndex={focusedIndex === index ? 0 : -1}
                     onClick={() => handleSelect(wallet.id)}
-                    className={`px-4 py-3 flex items-center gap-3 cursor-pointer transition-colors hover:bg-white/[0.03] ${
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        handleSelect(wallet.id);
+                      }
+                    }}
+                    className={`px-4 py-3 flex items-center gap-3 cursor-pointer transition-colors hover:bg-white/[0.03] focus:outline-none focus:bg-white/[0.06] ${
                       selectedWallet?.id === wallet.id ? "bg-[#e8b84b]/5" : ""
-                    }`}
+                    } ${focusedIndex === index ? "bg-white/[0.06]" : ""}`}
                   >
                     {/* Selection indicator */}
                     <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
