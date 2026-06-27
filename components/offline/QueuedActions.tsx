@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Clock, RefreshCw, Trash2 } from "lucide-react";
-import { useOffline } from "./OfflineProvider";
+import { QueuedAction, useOffline } from "./OfflineProvider";
 
 export default function QueuedActions() {
   const { queuedActions, retryQueuedActions, clearQueue } = useOffline();
@@ -65,7 +65,7 @@ export default function QueuedActions() {
               No queued actions.
             </p>
           ) : (
-            queuedActions.map((action: any) => (
+            queuedActions.map((action: QueuedAction) => (
               <div
                 key={action.id}
                 className="rounded-lg border border-white/10 p-3"

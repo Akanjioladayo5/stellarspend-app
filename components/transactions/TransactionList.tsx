@@ -1,6 +1,12 @@
 "use client";
 
-import React, { useEffect, useRef, useCallback, useState } from "react";
+import React, {
+  useEffect,
+  useRef,
+  useCallback,
+  useState,
+  useMemo,
+} from "react";
 import {
   fetchTransactions,
   Transaction,
@@ -8,7 +14,7 @@ import {
   PaginatedResponse,
 } from "@/lib/api/client";
 import TransactionItem from "./TransactionItem";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, Search } from "lucide-react";
 
 interface TransactionListProps {
   filters: FilterParams;
@@ -26,6 +32,21 @@ export default function TransactionList({
   const [total, setTotal] = useState(0);
   const observerTarget = useRef<HTMLDivElement>(null);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      setDebouncedSearch(searchQuery.trim());
+    }, 300);
+
+    return () => window.clearTimeout(timer);
+  }, [searchQuery]);
+
+  const activeFilters = useMemo<FilterParams>(() => ({
+    ...filters,
+    search: debouncedSearch || undefined,
+  }), [filters, debouncedSearch]);
 
   // Reset pagination when filters change
   useEffect(() => {
@@ -33,7 +54,7 @@ export default function TransactionList({
     setPage(1);
     setHasMore(true);
     setLoading(true);
-  }, [filters]);
+  }, [activeFilters]);
 
   // Load transactions
   const loadTransactions = useCallback(
@@ -43,7 +64,7 @@ export default function TransactionList({
           setIsLoadingMore(true);
         }
         const response: PaginatedResponse<Transaction> =
-          await fetchTransactions(filters, pageNum, 10);
+          await fetchTransactions(activeFilters, pageNum, 10);
 
         if (isNewSearch) {
           setTransactions(response.data);
@@ -61,13 +82,13 @@ export default function TransactionList({
         setIsLoadingMore(false);
       }
     },
-    [filters],
+    [activeFilters],
   );
 
   // Initial load
   useEffect(() => {
     loadTransactions(1, true);
-  }, [filters, loadTransactions]);
+  }, [activeFilters, loadTransactions]);
 
   // Infinite scroll observer
   useEffect(() => {
@@ -103,9 +124,33 @@ export default function TransactionList({
     }
   };
 
+  const searchInput = (
+    <div className="mb-6">
+      <label
+        htmlFor="transaction-search"
+        className="text-[10px] font-black text-[#7a8aaa] uppercase tracking-[0.3em]"
+      >
+        Search transactions
+      </label>
+      <div className="mt-3 flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 shadow-inner shadow-black/20">
+        <Search className="w-4 h-4 text-[#7a8aaa]" />
+        <input
+          id="transaction-search"
+          type="search"
+          value={searchQuery}
+          onChange={(event) => setSearchQuery(event.target.value)}
+          placeholder="Search description, amount, or date"
+          className="w-full bg-transparent text-sm text-white outline-none placeholder:text-[#7a8aaa]/70"
+        />
+      </div>
+    </div>
+  );
+
   if (loading && transactions.length === 0) {
     return (
-      <div className="bg-white/[0.01] backdrop-blur-sm rounded-3xl border border-white/5 shadow-2xl shadow-black/50">
+      <div>
+        {searchInput}
+        <div className="bg-white/[0.01] backdrop-blur-sm rounded-3xl border border-white/5 shadow-2xl shadow-black/50">
         <div className="overflow-x-auto overflow-y-visible">
           <table className="w-full text-left border-collapse">
             <thead>
@@ -162,26 +207,31 @@ export default function TransactionList({
             </tbody>
           </table>
         </div>
+        </div>
       </div>
     );
   }
 
   if (transactions.length === 0) {
     return (
-      <div className="text-center py-16 flex flex-col items-center">
-        <div className="w-1 h-12 bg-linear-to-b from-[#e8b84b]/20 to-transparent mb-6" />
-        <p className="text-[#7a8aaa] text-[10px] font-bold uppercase tracking-[0.3em]">
-          No transactions found
-        </p>
-        <p className="text-[#7a8aaa]/60 text-xs mt-2">
-          Try adjusting your filters or search query
-        </p>
+      <div>
+        {searchInput}
+        <div className="text-center py-16 flex flex-col items-center">
+          <div className="w-1 h-12 bg-linear-to-b from-[#e8b84b]/20 to-transparent mb-6" />
+          <p className="text-[#7a8aaa] text-[10px] font-bold uppercase tracking-[0.3em]">
+            No results found
+          </p>
+          <p className="text-[#7a8aaa]/60 text-xs mt-2">
+            Try adjusting your filters or search query
+          </p>
+        </div>
       </div>
     );
   }
 
   return (
-    <>
+    <div>
+      {searchInput}
       <div className="bg-white/[0.01] backdrop-blur-sm rounded-3xl border border-white/5 shadow-2xl shadow-black/50">
         <div className="overflow-x-auto overflow-y-visible">
           <table className="w-full text-left border-collapse">
@@ -278,6 +328,6 @@ export default function TransactionList({
           </p>
         </div>
       )}
-    </>
+    </div>
   );
 }
