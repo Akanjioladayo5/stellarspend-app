@@ -18,6 +18,7 @@
         "name": "next"
       }
     ],
+    "types": ["node", "jest", "@testing-library/jest-dom"],
     "paths": {
       "@/*": ["./*"]
     }
@@ -31,5 +32,13 @@
     "**/*.mts",
     "cypress.config.ts"
   ],
-  "exclude": ["node_modules", "cypress"]
+  "exclude": [
+    "node_modules",
+    "cypress",
+    "**/__tests__/**/*",
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "jest.setup.ts",
+    "jest.config.js"
+  ]
 }

@@ -18,6 +18,7 @@ interface OfflineContextType {
   queuedActions: QueuedAction[];
   queueAction: (type: string, description: string, data: unknown) => void;
   removeAction: (id: string) => void;
+  retryQueuedActions: () => void;
   clearQueue: () => void;
 }
 
@@ -82,6 +83,14 @@ export function OfflineProvider({ children }: { children: React.ReactNode }) {
     setQueuedActions((prev) => prev.filter((action) => action.id !== id));
   };
 
+  const retryQueuedActions = () => {
+    if (queuedActions.length === 0) {
+      return;
+    }
+
+    setQueuedActions((prev) => [...prev]);
+  };
+
   const clearQueue = () => setQueuedActions([]);
 
   return (
@@ -91,6 +100,7 @@ export function OfflineProvider({ children }: { children: React.ReactNode }) {
         queuedActions,
         queueAction,
         removeAction,
+        retryQueuedActions,
         clearQueue,
       }}
     >

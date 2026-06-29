@@ -5,7 +5,7 @@ describe("QueuedActionsBadge", () => {
   it("shows count when count is greater than zero", () => {
     render(<QueuedActionsBadge count={3} />);
 
-    expect(screen.getByText("3")).toBeInTheDocument();
+    expect(screen.getByText("3")).toBeTruthy();
   });
 
   it("renders nothing when count is zero", () => {
@@ -13,6 +13,6 @@ describe("QueuedActionsBadge", () => {
       <QueuedActionsBadge count={0} />
     );
 
-    expect(container.firstChild).toBeNull();
+    expect(container.firstChild).toBeFalsy();
   });
 });

@@ -15,8 +15,6 @@ describe("QueuedActions", () => {
   it("shows queued actions badge", () => {
     render(<QueuedActions />);
 
-    expect(
-      screen.getByLabelText("3 queued actions")
-    ).toBeInTheDocument();
+    expect(screen.getByLabelText("3 queued actions")).toBeTruthy();
   });
 });

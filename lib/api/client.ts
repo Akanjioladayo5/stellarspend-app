@@ -448,12 +448,32 @@ export async function fetchTransactions(
 
   // Apply search
   if (filters?.search) {
-    const query = filters.search.toLowerCase();
-    filtered = filtered.filter(
-      (tx) =>
-        tx.memo.toLowerCase().includes(query) ||
-        tx.hash.toLowerCase().includes(query),
-    );
+    const query = filters.search.trim().toLowerCase();
+    filtered = filtered.filter((tx) => {
+      const memo = tx.memo?.toLowerCase() ?? "";
+      const hash = tx.hash?.toLowerCase() ?? "";
+      const amount = tx.operations
+        .map((operation) => operation.amount ?? "")
+        .join(" ")
+        .toLowerCase();
+      const formattedDate = new Date(tx.created_at).toLocaleDateString(
+        undefined,
+        {
+          year: "numeric",
+          month: "short",
+          day: "numeric",
+        },
+      ).toLowerCase();
+      const isoDate = tx.created_at.toLowerCase();
+
+      return (
+        memo.includes(query) ||
+        hash.includes(query) ||
+        amount.includes(query) ||
+        formattedDate.includes(query) ||
+        isoDate.includes(query)
+      );
+    });
   }
 
   // Sort by date descending

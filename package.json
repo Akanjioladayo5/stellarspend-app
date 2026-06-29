@@ -28,12 +28,16 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.2.1",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
+    "@types/jest": "^30.0.0",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "cypress": "^15.11.0",
     "eslint": "^9",
     "eslint-config-next": "16.1.6",
+    "jest": "^30.4.2",
     "postcss": "^8.5.6",
     "tailwindcss": "^4.2.1",
     "typescript": "^5"
