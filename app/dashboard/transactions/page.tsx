@@ -216,7 +216,7 @@ export default function TransactionsPage() {
           )}
         </div>
 
-        {/* Transaction List with infinite scroll */}
+        {/* Transaction List with pagination */}
         <TransactionList filters={filters} onOpenDrawer={handleOpenDrawer} />
       </div>
 
