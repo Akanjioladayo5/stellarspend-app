@@ -1,11 +1,17 @@
 "use client";
 
+import { useState } from "react";
 import BudgetForm from '@/components/budgets/BudgetForm';
 import GoalForm from '@/components/savings/GoalForm';
 import { Card, CardHeader, CardBody } from '@/components/ui/Card';
 import { Grid } from '@/components/ui/Grid';
 
 export default function TestFormsPage() {
+    // Was hardcoded to `true`, which meant GoalForm's modal backdrop
+    // permanently covered the whole page (including BudgetForm's inputs).
+    // Default it closed and let the harness open it on demand.
+    const [isGoalFormOpen, setIsGoalFormOpen] = useState(false);
+
     return (
         <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
             <div className="max-w-4xl mx-auto space-y-12">
@@ -31,7 +37,18 @@ export default function TestFormsPage() {
                             <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-200">Goal Form</h2>
                         </CardHeader>
                         <CardBody>
-                            <GoalForm open={true} onOpenChange={() => {}} onGoalCreated={() => {}} />
+                            <button
+                                type="button"
+                                onClick={() => setIsGoalFormOpen(true)}
+                                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-md transition-colors duration-200"
+                            >
+                                Open Goal Form
+                            </button>
+                            <GoalForm
+                                open={isGoalFormOpen}
+                                onOpenChange={setIsGoalFormOpen}
+                                onGoalCreated={() => setIsGoalFormOpen(false)}
+                            />
                         </CardBody>
                     </Card>
                 </Grid>

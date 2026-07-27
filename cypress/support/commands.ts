@@ -1,9 +1,15 @@
 /// <reference types="cypress" />
 
-declare module 'cypress' {
-  interface Chainable {
-    mockFreighter(): Chainable<void>;
-    mockStellarAPI(): Chainable<void>;
+// Augment the real Cypress.Chainable interface (namespace merge), not a
+// standalone module — Cypress's own Chainable<Subject> is generic and lives
+// in the `Cypress` namespace, so `declare module 'cypress'` creates an
+// unrelated type instead of extending the real one.
+declare global {
+  namespace Cypress {
+    interface Chainable {
+      mockFreighter(): Chainable<void>;
+      mockStellarAPI(): Chainable<void>;
+    }
   }
 }
 
@@ -41,3 +47,7 @@ Cypress.Commands.add("mockStellarAPI", () => {
     }).as("submitTransaction");
   });
 });
+
+// Required so `declare global` is scoped to this file as a module augmentation
+// rather than clashing with other global declarations in the project.
+export {};
