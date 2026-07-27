@@ -14,6 +14,10 @@ interface LanguageOption {
 const languages: LanguageOption[] = [
   { code: "en", name: "English", flag: "🇺🇸" },
   { code: "es", name: "Español", flag: "🇪🇸" },
+  { code: "fr", name: "Français", flag: "🇫🇷" },
+  { code: "sw", name: "Kiswahili", flag: "🇰🇪" },
+  { code: "pt", name: "Português", flag: "🇵🇹" },
+  { code: "ar", name: "العربية", flag: "🇸🇦" },
 ];
 
 interface LanguageSelectorProps {
@@ -25,7 +29,7 @@ export const LanguageSelector: React.FC<LanguageSelectorProps> = ({
   variant = "dropdown",
   className = "",
 }) => {
-  const { language, changeLanguage } = useI18n();
+  const { language, changeLanguage, isRTL } = useI18n();
   const _currentLanguage = languages.find(l => l.code === language) || languages[0];
 
   const handleLanguageChange = async (lng: string) => {
@@ -50,6 +54,8 @@ export const LanguageSelector: React.FC<LanguageSelectorProps> = ({
               onClick={() => handleLanguageChange(lang.code)}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
+              lang={lang.code}
+              dir={lang.code === "ar" ? "rtl" : "ltr"}
               className={`relative inline-flex items-center gap-3 p-4 rounded-xl border transition-all duration-200 ${
                 language === lang.code
                   ? "border-[#e8b84b] bg-[#e8b84b]/10 text-white"
@@ -62,7 +68,7 @@ export const LanguageSelector: React.FC<LanguageSelectorProps> = ({
                 <motion.div
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
-                  className="absolute -top-2 -right-2 w-6 h-6 bg-[#e8b84b] rounded-full flex items-center justify-center"
+                  className="absolute -top-2 -end-2 w-6 h-6 bg-[#e8b84b] rounded-full flex items-center justify-center"
                 >
                   <svg
                     className="w-4 h-4 text-[#080b18]"
@@ -94,11 +100,11 @@ export const LanguageSelector: React.FC<LanguageSelectorProps> = ({
         <select
           value={language}
           onChange={(e) => handleLanguageChange(e.target.value)}
-          className="bg-white/[0.02] border border-white/10 rounded-lg px-3 py-2 text-sm text-[#e8edf8] focus:outline-none focus:border-[#e8b84b]/50 focus:ring-1 focus:ring-[#e8b84b]/50 cursor-pointer appearance-none pr-8"
+          className="bg-white/[0.02] border border-white/10 rounded-lg ps-3 pe-8 py-2 text-sm text-[#e8edf8] focus:outline-none focus:border-[#e8b84b]/50 focus:ring-1 focus:ring-[#e8b84b]/50 cursor-pointer appearance-none"
           style={{
             backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%237a8aaa'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
             backgroundRepeat: "no-repeat",
-            backgroundPosition: "right 0.5rem center",
+            backgroundPosition: isRTL ? "left 0.5rem center" : "right 0.5rem center",
             backgroundSize: "1em 1em",
           }}
         >
