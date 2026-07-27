@@ -1,11 +1,14 @@
 "use client";
 
+import { useState } from "react";
 import BudgetForm from '@/components/budgets/BudgetForm';
 import GoalForm from '@/components/savings/GoalForm';
 import { Card, CardHeader, CardBody } from '@/components/ui/Card';
 import { Grid } from '@/components/ui/Grid';
-import { useState } from 'react';
 export default function TestFormsPage() {
+    // Was hardcoded to `true`, which meant GoalForm's modal backdrop
+    // permanently covered the whole page (including BudgetForm's inputs).
+    // Default it closed and let the harness open it on demand.
     const [isGoalFormOpen, setIsGoalFormOpen] = useState(false);
 
     return (
