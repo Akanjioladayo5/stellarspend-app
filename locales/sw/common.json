@@ -1,0 +1,89 @@
+{
+    "common": {
+      "title": "StellarSpend",
+      "tagline": "Uhuru wa Kifedha kwenye Blockchain",
+      "description": "Fuatilia matumizi, simamia bajeti, na jenga akiba kwenye mtandao wa Stellar.",
+      "back": "Rudi",
+      "loading": "Inapakia...",
+      "error": "Hitilafu",
+      "success": "Imefanikiwa",
+      "cancel": "Ghairi",
+      "save": "Hifadhi",
+      "delete": "Futa",
+      "edit": "Hariri",
+      "close": "Funga",
+      "language": "Lugha",
+      "settings": "Mipangilio"
+    },
+    "dashboard": {
+      "title": "Dashibodi",
+      "welcome": "Karibu tena",
+      "balances": {
+        "title": "Salio Lako",
+        "total": "Salio Jumla",
+        "available": "Inayopatikana"
+      },
+      "quickActions": {
+        "title": "Vitendo vya Haraka",
+        "send": "Tuma",
+        "receive": "Pokea",
+        "swap": "Badilisha",
+        "history": "Historia"
+      },
+      "recentTransactions": {
+        "title": "Miamala ya Hivi Karibuni",
+        "viewAll": "Angalia Zote",
+        "noTransactions": "Hakuna miamala ya hivi karibuni"
+      }
+    },
+    "settings": {
+      "title": "Mipangilio ya Jukwaa",
+      "subtitle": "Rekebisha arifa zako za miamala na mtiririko wa taarifa kwa uzoefu wa kibinafsi.",
+      "notifications": {
+        "title": "Mapendeleo ya Arifa",
+        "subtitle": "Dhibiti aina za matukio zinazosababisha arifa za wakati halisi.",
+        "successAlerts": "Arifa za Mafanikio",
+        "successAlertsDesc": "Uthibitisho wa kuona kwa shughuli zilizofanikiwa kama vile utekelezaji wa malipo au masasisho ya wasifu.",
+        "systemErrors": "Hitilafu za Mfumo",
+        "systemErrorsDesc": "Arifa za papo hapo miamala inaposhindwa, matatizo ya muunganisho wa mtandao, au hitilafu za uthibitishaji zinapotokea.",
+        "informationTips": "Taarifa na Vidokezo",
+        "informationTipsDesc": "Ujumbe usio muhimu sana, mwongozo wa kuanza, na matangazo ya jumla ya jukwaa."
+      },
+      "language": {
+        "title": "Mapendeleo ya Lugha",
+        "subtitle": "Chagua lugha unayopendelea kwa kiolesura.",
+        "selectLabel": "Chagua Lugha"
+      }
+    },
+    "transactions": {
+      "title": "Miamala",
+      "date": "Tarehe",
+      "amount": "Kiasi",
+      "type": "Aina",
+      "status": "Hali",
+      "description": "Maelezo"
+    },
+    "hero": {
+      "title": "Huduma za Benki Bila Mipaka",
+      "subtitle": "Kuwawezesha wasio na akaunti za benki kwa zana za kifedha zinazotegemea blockchain",
+      "cta": "Anza Sasa"
+    },
+    "features": {
+      "budgets": {
+        "title": "Bajeti Yenye Akili",
+        "description": "Ufuatiliaji wa bajeti na mipaka ya matumizi kwa kutumia AI"
+      },
+      "savings": {
+        "title": "Malengo ya Akiba",
+        "description": "Weka na fuatilia malengo ya akiba kwa michango ya kiotomatiki"
+      },
+      "tracking": {
+        "title": "Ufuatiliaji wa Miamala",
+        "description": "Ufuatiliaji wa miamala wa wakati halisi kwenye blockchain ya Stellar"
+      }
+    },
+    "offline": {
+      "banner": "Kwa sasa hauko mtandaoni. Baadhi ya vipengele vinaweza kuwa na kikomo.",
+      "queuedActions": "Vitendo Vilivyopangwa Foleni"
+    }
+  }

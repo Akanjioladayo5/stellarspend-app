@@ -38,8 +38,13 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // `lang`/`dir` here are the server-rendered defaults (English/LTR).
+  // I18nProvider reads the persisted language client-side (localStorage)
+  // and flips document.documentElement.dir/lang before paint when the
+  // stored preference is a non-English or RTL language. suppressHydrationWarning
+  // prevents a false-positive mismatch warning for that one-time correction.
   return (
-    <html lang="en">
+    <html lang="en" dir="ltr" suppressHydrationWarning>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased font-sans`}
       >
@@ -50,7 +55,7 @@ export default function RootLayout({
                 {/* Skip-to-content link for keyboard accessibility */}
                 <a
                   href="#main-content"
-                  className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 bg-[#e8b84b] text-[#1a0f00] px-4 py-2 rounded-md font-semibold z-50 focus:outline-none focus:ring-2 focus:ring-[#e8b84b] focus:ring-offset-2 focus:ring-offset-[#080b18]"
+                  className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:start-4 bg-[#e8b84b] text-[#1a0f00] px-4 py-2 rounded-md font-semibold z-50 focus:outline-none focus:ring-2 focus:ring-[#e8b84b] focus:ring-offset-2 focus:ring-offset-[#080b18]"
                 >
                   Skip to main content
                 </a>

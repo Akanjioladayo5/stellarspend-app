@@ -1,16 +1,27 @@
 /// <reference types="cypress" />
 
-declare module 'cypress' {
-  interface Chainable {
-    mockFreighter(): Chainable<void>;
-    mockStellarAPI(): Chainable<void>;
+declare global {
+  // eslint-disable-next-line @typescript-eslint/no-namespace
+  namespace Cypress {
+    interface Chainable {
+      mockFreighter(): Chainable<void>;
+      mockStellarAPI(): Chainable<void>;
+    }
+  }
+  interface Window {
+    freighter?: {
+      isConnected: () => Promise<boolean>;
+      getPublicKey: () => Promise<string>;
+      getNetwork: () => Promise<string>;
+      signTransaction: (xdr: string) => Promise<{ signedXDR: string }>;
+    };
   }
 }
 
 Cypress.Commands.add("mockFreighter", (): Cypress.Chainable<void> => {
   return cy.fixture("wallet").then((wallet) => {
     cy.window().then((win) => {
-      (win as typeof win & { freighter: unknown }).freighter = {
+      win.freighter = {
         isConnected: () => Promise.resolve(wallet.isConnected),
         getPublicKey: () => Promise.resolve(wallet.publicKey),
         getNetwork: () => Promise.resolve(wallet.network),
@@ -41,3 +52,5 @@ Cypress.Commands.add("mockStellarAPI", () => {
     }).as("submitTransaction");
   });
 });
+
+export {};
