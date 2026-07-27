@@ -1,22 +1,27 @@
 /// <reference types="cypress" />
 
-// Augment the real Cypress.Chainable interface (namespace merge), not a
-// standalone module — Cypress's own Chainable<Subject> is generic and lives
-// in the `Cypress` namespace, so `declare module 'cypress'` creates an
-// unrelated type instead of extending the real one.
 declare global {
+  // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace Cypress {
     interface Chainable {
       mockFreighter(): Chainable<void>;
       mockStellarAPI(): Chainable<void>;
     }
   }
+  interface Window {
+    freighter?: {
+      isConnected: () => Promise<boolean>;
+      getPublicKey: () => Promise<string>;
+      getNetwork: () => Promise<string>;
+      signTransaction: (xdr: string) => Promise<{ signedXDR: string }>;
+    };
+  }
 }
 
 Cypress.Commands.add("mockFreighter", (): Cypress.Chainable<void> => {
   return cy.fixture("wallet").then((wallet) => {
     cy.window().then((win) => {
-      (win as typeof win & { freighter: unknown }).freighter = {
+      win.freighter = {
         isConnected: () => Promise.resolve(wallet.isConnected),
         getPublicKey: () => Promise.resolve(wallet.publicKey),
         getNetwork: () => Promise.resolve(wallet.network),
@@ -48,6 +53,4 @@ Cypress.Commands.add("mockStellarAPI", () => {
   });
 });
 
-// Required so `declare global` is scoped to this file as a module augmentation
-// rather than clashing with other global declarations in the project.
 export {};

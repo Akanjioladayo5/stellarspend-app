@@ -5,7 +5,7 @@ import BudgetForm from '@/components/budgets/BudgetForm';
 import GoalForm from '@/components/savings/GoalForm';
 import { Card, CardHeader, CardBody } from '@/components/ui/Card';
 import { Grid } from '@/components/ui/Grid';
-
+import { useState } from 'react';
 export default function TestFormsPage() {
     // Was hardcoded to `true`, which meant GoalForm's modal backdrop
     // permanently covered the whole page (including BudgetForm's inputs).
@@ -37,17 +37,10 @@ export default function TestFormsPage() {
                             <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-200">Goal Form</h2>
                         </CardHeader>
                         <CardBody>
-                            <button
-                                type="button"
-                                onClick={() => setIsGoalFormOpen(true)}
-                                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-md transition-colors duration-200"
-                            >
-                                Open Goal Form
-                            </button>
                             <GoalForm
                                 open={isGoalFormOpen}
                                 onOpenChange={setIsGoalFormOpen}
-                                onGoalCreated={() => setIsGoalFormOpen(false)}
+                                onGoalCreated={() => {}}
                             />
                         </CardBody>
                     </Card>

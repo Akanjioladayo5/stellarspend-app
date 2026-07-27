@@ -5,12 +5,21 @@ import i18next from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import commonEn from '@/locales/en/common.json';
 import commonEs from '@/locales/es/common.json';
+import commonFr from '@/locales/fr/common.json';
+import commonSw from '@/locales/sw/common.json';
+import commonPt from '@/locales/pt/common.json';
+import commonAr from '@/locales/ar/common.json';
+import { isRTL as computeIsRTL, getIntlLocale, SUPPORTED_LANGUAGES } from '@/lib/i18n-locale';
 
 // Initialize i18next
 i18next.use(initReactI18next).init({
   resources: {
     en: { translation: commonEn },
     es: { translation: commonEs },
+    fr: { translation: commonFr },
+    sw: { translation: commonSw },
+    pt: { translation: commonPt },
+    ar: { translation: commonAr },
   },
   lng: "en",
   fallbackLng: "en",
@@ -26,6 +35,9 @@ interface I18nContextType {
   language: string;
   changeLanguage: (lng: string) => Promise<void>;
   t: (key: string) => string;
+  dir: "ltr" | "rtl";
+  isRTL: boolean;
+  intlLocale: string;
 }
 
 const I18nContext = createContext<I18nContextType | undefined>(undefined);
@@ -43,6 +55,13 @@ interface I18nProviderProps {
   initialLanguage?: string;
 }
 
+function applyDocumentDirection(lng: string) {
+  if (typeof document === "undefined") return;
+  const rtl = computeIsRTL(lng);
+  document.documentElement.dir = rtl ? "rtl" : "ltr";
+  document.documentElement.lang = lng;
+}
+
 export const I18nProvider: React.FC<I18nProviderProps> = ({
   children,
   initialLanguage = "en",
@@ -50,7 +69,10 @@ export const I18nProvider: React.FC<I18nProviderProps> = ({
   const [language, setLanguage] = useState(() => {
     // Initialize language from localStorage or default
     if (typeof window !== 'undefined') {
-      return localStorage.getItem('stellarspend_language') || initialLanguage;
+      const stored = localStorage.getItem('stellarspend_language');
+      if (stored && (SUPPORTED_LANGUAGES as readonly string[]).includes(stored)) {
+        return stored;
+      }
     }
     return initialLanguage;
   });
@@ -58,11 +80,13 @@ export const I18nProvider: React.FC<I18nProviderProps> = ({
   useEffect(() => {
     // Set i18next language when language changes
     i18next.changeLanguage(language);
+    applyDocumentDirection(language);
   }, [language]);
 
   const changeLanguage = async (lng: string) => {
     await i18next.changeLanguage(lng);
     setLanguage(lng);
+    applyDocumentDirection(lng);
 
     if (typeof window !== "undefined") {
       localStorage.setItem("stellarspend_language", lng);
@@ -83,8 +107,19 @@ export const I18nProvider: React.FC<I18nProviderProps> = ({
     return value || key;
   };
 
+  const rtl = computeIsRTL(language);
+
   return (
-    <I18nContext.Provider value={{ language, changeLanguage, t }}>
+    <I18nContext.Provider
+      value={{
+        language,
+        changeLanguage,
+        t,
+        dir: rtl ? "rtl" : "ltr",
+        isRTL: rtl,
+        intlLocale: getIntlLocale(language),
+      }}
+    >
       {children}
     </I18nContext.Provider>
   );
