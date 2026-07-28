@@ -1,9 +1,11 @@
-"use client";
-
-import React from "react";
+import React, { useState } from "react";
 import { z } from "zod";
 import { useForm } from "@/hooks/useForm";
 import { useOffline } from "@/components/offline/OfflineProvider";
+import useWallet from "@/hooks/useWallet";
+import { createGoal, Goal } from "@/lib/stellar/savingsGoalContract";
+
+
 
 const goalSchema = z.object({
     title: z.string().min(1, 'Goal title is required').max(100, 'Title is too long'),
@@ -25,11 +27,15 @@ type GoalFormData = z.infer<typeof goalSchema>;
 interface GoalFormProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
-    onGoalCreated: (goal: GoalFormData) => void;
+    onGoalCreated: (goal: Goal) => void;
 }
 
 export default function GoalForm({ open, onOpenChange, onGoalCreated }: GoalFormProps) {
     const { isOnline, queueAction } = useOffline();
+    const { freighter } = useWallet();
+    const publicKey = freighter.publicKey;
+    const [txStatus, setTxStatus] = useState<string | null>(null);
+
     const {
         register,
         handleSubmit,
@@ -55,14 +61,29 @@ export default function GoalForm({ open, onOpenChange, onGoalCreated }: GoalForm
             return;
         }
 
-        // Simulate API call
-        console.log('Goal submitted:', data);
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-        alert('Savings goal created successfully!');
-        onGoalCreated(data);
-        reset();
-        onOpenChange(false);
+        if (!publicKey) {
+            alert('Please connect your Freighter wallet to persist this savings goal on-chain.');
+            return;
+        }
+
+        try {
+            setTxStatus('Initializing transaction...');
+            const newGoal = await createGoal(publicKey, data, (status) => {
+                setTxStatus(status);
+            });
+            alert('Savings goal created successfully!');
+            onGoalCreated(newGoal);
+            reset();
+            onOpenChange(false);
+        } catch (error: unknown) {
+            console.error(error);
+            const errMessage = error instanceof Error ? error.message : String(error);
+            alert(`Failed to create savings goal: ${errMessage}`);
+        } finally {
+            setTxStatus(null);
+        }
     };
+
 
     return (
         <div className={`fixed inset-0 z-50 flex items-center justify-center ${open ? 'block' : 'hidden'}`}>
@@ -147,19 +168,29 @@ export default function GoalForm({ open, onOpenChange, onGoalCreated }: GoalForm
                     </div>
 
                     <div className="flex justify-end gap-2 pt-4">
+                        {txStatus && (
+                            <div className="text-xs text-blue-600 dark:text-blue-400 flex items-center gap-1.5 mr-auto">
+                                <svg className="animate-spin h-3.5 w-3.5 text-blue-600 dark:text-blue-400" fill="none" viewBox="0 0 24 24">
+                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                                </svg>
+                                <span className="font-medium">{txStatus}</span>
+                            </div>
+                        )}
                         <button
                             type="button"
                             onClick={() => onOpenChange(false)}
-                            className="px-4 py-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md"
+                            disabled={!!txStatus}
+                            className="px-4 py-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md disabled:opacity-50"
                         >
                             Cancel
                         </button>
                         <button
                             type="submit"
-                            disabled={!isValid || isSubmitting}
+                            disabled={!isValid || isSubmitting || !!txStatus}
                             className="px-6 py-2 bg-green-600 hover:bg-green-700 disabled:bg-green-300 text-white font-semibold rounded-lg shadow-md transition-colors duration-200"
                         >
-                            {isSubmitting ? 'Creating...' : 'Create Goal'}
+                            {txStatus ? 'Processing...' : 'Create Goal'}
                         </button>
                     </div>
                 </form>

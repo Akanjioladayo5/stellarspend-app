@@ -1,63 +1,75 @@
 'use client'
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import BalancesWidget from "@/components/dashboard/BalancesWidget";
 import QuickActions from "@/components/dashboard/QuickActions";
 import RecentTransactions from "@/components/dashboard/RecentTransactions";
 import GoalForm from "@/components/savings/GoalForm";
 import { ContributionWidget } from "@/components/savings/ContributionWidget";
-
-interface Goal {
-  id: string
-  name: string
-  targetAmount: number
-  currentAmount: number
-  deadline: string
-  recurrence: 'once' | 'monthly' | 'yearly'
-  createdAt: Date
-}
-
-interface GoalFormData {
-  title: string;
-  targetAmount: number;
-  deadline: string;
-  recurrence: 'once' | 'monthly' | 'yearly';
-}
+import useWallet from "@/hooks/useWallet";
+import { useOffline } from "@/components/offline/OfflineProvider";
+import { fetchGoals, contributeToGoal, getMockGoalsFallback, Goal } from "@/lib/stellar/savingsGoalContract";
 
 export default function DashboardPage() {
-  const [goals, setGoals] = useState<Goal[]>([
-    {
-      id: '1',
-      name: 'New Laptop',
-      targetAmount: 1200,
-      currentAmount: 300,
-      deadline: '2024-12-31',
-      recurrence: 'once',
-      createdAt: new Date(),
-    },
-  ]);
+  const { freighter } = useWallet();
+  const publicKey = freighter.publicKey;
+  const { isOnline, queueAction } = useOffline();
+
+  const [goals, setGoals] = useState<Goal[]>([]);
   const [goalModalOpen, setGoalModalOpen] = useState(false);
   const availableBalance = 500; // Mock balance
 
-  const handleGoalCreated = (goalData: GoalFormData) => {
-    const newGoal: Goal = {
-      id: Math.random().toString(36).substring(2, 11),
-      name: goalData.title,
-      targetAmount: goalData.targetAmount,
-      currentAmount: 0,
-      deadline: goalData.deadline,
-      recurrence: goalData.recurrence,
-      createdAt: new Date(),
-    };
+  useEffect(() => {
+    async function loadGoals() {
+      if (publicKey) {
+        try {
+          const contractGoals = await fetchGoals(publicKey);
+          setGoals(contractGoals);
+        } catch (e) {
+          console.error(e);
+          setGoals(getMockGoalsFallback());
+        }
+      } else {
+        setGoals(getMockGoalsFallback());
+      }
+    }
+    loadGoals();
+  }, [publicKey]);
+
+  const handleGoalCreated = (newGoal: Goal) => {
     setGoals(prev => [...prev, newGoal]);
   };
 
-  const handleContribute = (goalId: string, amount: number) => {
-    setGoals(prev => prev.map(goal =>
-      goal.id === goalId
-        ? { ...goal, currentAmount: goal.currentAmount + amount }
-        : goal
-    ));
+  const handleContribute = async (goalId: string, amount: number) => {
+    if (!isOnline) {
+      queueAction('CONTRIBUTE_GOAL', `Contribute to goal: ${goalId}`, { goalId, amount });
+      alert('You are offline. Your contribution has been queued.');
+      // Optimistic UI update
+      setGoals(prev => prev.map(goal =>
+        goal.id === goalId
+          ? { ...goal, currentAmount: goal.currentAmount + amount }
+          : goal
+      ));
+      return;
+    }
+
+    if (publicKey) {
+      try {
+        await contributeToGoal(publicKey, goalId, amount);
+        const contractGoals = await fetchGoals(publicKey);
+        setGoals(contractGoals);
+      } catch (e: unknown) {
+        const errMessage = e instanceof Error ? e.message : String(e);
+        alert(`Failed to contribute: ${errMessage}`);
+      }
+    } else {
+      // Fallback
+      setGoals(prev => prev.map(goal =>
+        goal.id === goalId
+          ? { ...goal, currentAmount: goal.currentAmount + amount }
+          : goal
+      ));
+    }
   };
 
   return (
