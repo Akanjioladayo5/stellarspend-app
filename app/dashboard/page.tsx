@@ -1,45 +1,144 @@
 'use client'
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import BalancesWidget from "@/components/dashboard/BalancesWidget";
 import QuickActions from "@/components/dashboard/QuickActions";
 import RecentTransactions from "@/components/dashboard/RecentTransactions";
 import GoalForm from "@/components/savings/GoalForm";
 import { ContributionWidget } from "@/components/savings/ContributionWidget";
-
-interface Goal {
-  id: string
-  name: string
-  targetAmount: number
-  currentAmount: number
-  deadline: string
-  recurrence: 'once' | 'monthly' | 'yearly'
-  createdAt: Date
-}
-
-interface GoalFormData {
-  title: string;
-  targetAmount: number;
-  deadline: string;
-  recurrence: 'once' | 'monthly' | 'yearly';
-}
+import {
+  loadGoals,
+  saveGoals,
+  loadContributions,
+  addContribution,
+  checkAndExecuteDueContributions,
+} from "@/lib/savings/scheduler";
+import { calculateRoundUp } from "@/lib/savings/roundUp";
+import type {
+  Goal,
+  GoalSchedule,
+  GoalFormData,
+  RoundUpRule,
+  Contribution,
+} from "@/lib/types/savings";
+import { MOCK_TRANSACTIONS } from "@/lib/api/client";
 
 export default function DashboardPage() {
-  const [goals, setGoals] = useState<Goal[]>([
-    {
-      id: '1',
-      name: 'New Laptop',
-      targetAmount: 1200,
-      currentAmount: 300,
-      deadline: '2024-12-31',
-      recurrence: 'once',
-      createdAt: new Date(),
-    },
-  ]);
+  const [goals, setGoals] = useState<Goal[]>(() => {
+    if (typeof window === 'undefined') {
+      return [
+        {
+          id: '1',
+          name: 'New Laptop',
+          targetAmount: 1200,
+          currentAmount: 300,
+          deadline: '2024-12-31',
+          recurrence: 'once' as const,
+          createdAt: new Date(),
+        },
+      ];
+    }
+    const savedGoals = loadGoals();
+    return savedGoals.length > 0
+      ? savedGoals
+      : [
+          {
+            id: '1',
+            name: 'New Laptop',
+            targetAmount: 1200,
+            currentAmount: 300,
+            deadline: '2024-12-31',
+            recurrence: 'once' as const,
+            createdAt: new Date(),
+          },
+        ];
+  });
+  const [contributions, setContributions] = useState<Contribution[]>(() => {
+    if (typeof window === 'undefined') return [];
+    return loadContributions();
+  });
   const [goalModalOpen, setGoalModalOpen] = useState(false);
-  const availableBalance = 500; // Mock balance
+  const availableBalance = 500;
 
-  const handleGoalCreated = (goalData: GoalFormData) => {
+  useEffect(() => {
+    saveGoals(goals);
+  }, [goals]);
+
+  const processRoundUps = useCallback(() => {
+    const goalsWithRoundUp = goals.filter(
+      (g) => g.roundUpRule?.enabled && !g.roundUpRule.paused,
+    );
+    if (goalsWithRoundUp.length === 0) return;
+
+    MOCK_TRANSACTIONS.forEach((tx) => {
+      if (!tx.successful) return;
+      const paymentOp = tx.operations.find(
+        (op) => op.type === 'payment' && op.amount,
+      );
+      if (!paymentOp?.amount) return;
+
+      const txAmount = parseFloat(paymentOp.amount);
+
+      goalsWithRoundUp.forEach((goal) => {
+        if (goal.currentAmount >= goal.targetAmount) return;
+
+        const roundUpAmount = calculateRoundUp(
+          txAmount,
+          goal.roundUpRule!.nearestUnit,
+        );
+        if (roundUpAmount <= 0) return;
+
+        const alreadyProcessed = contributions.some(
+          (c) =>
+            c.goalId === goal.id &&
+            c.transactionHash === tx.hash &&
+            c.source === 'round-up',
+        );
+        if (alreadyProcessed) return;
+
+        const newContribution: Contribution = {
+          id: Math.random().toString(36).substring(2, 11),
+          goalId: goal.id,
+          amount: roundUpAmount,
+          source: 'round-up',
+          transactionHash: tx.hash,
+          createdAt: new Date(),
+        };
+
+        addContribution(newContribution);
+        setContributions((prev) => [...prev, newContribution]);
+        setGoals((prev) =>
+          prev.map((g) =>
+            g.id === goal.id
+              ? { ...g, currentAmount: g.currentAmount + roundUpAmount }
+              : g,
+          ),
+        );
+      });
+    });
+  }, [goals, contributions]);
+
+  useEffect(() => {
+    processRoundUps();
+    const interval = setInterval(() => {
+      processRoundUps();
+    }, 30000);
+    return () => clearInterval(interval);
+  }, [processRoundUps]);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const { updatedGoals, executedContributions } =
+        checkAndExecuteDueContributions(goals, availableBalance);
+      if (executedContributions.length > 0) {
+        setGoals(updatedGoals);
+        setContributions((prev) => [...prev, ...executedContributions]);
+      }
+    }, 60000);
+    return () => clearInterval(interval);
+  }, [goals, availableBalance]);
+
+  const handleGoalCreated = (goalData: GoalFormData & { schedule?: GoalSchedule }) => {
     const newGoal: Goal = {
       id: Math.random().toString(36).substring(2, 11),
       name: goalData.title,
@@ -48,16 +147,44 @@ export default function DashboardPage() {
       deadline: goalData.deadline,
       recurrence: goalData.recurrence,
       createdAt: new Date(),
+      schedule: goalData.schedule,
     };
-    setGoals(prev => [...prev, newGoal]);
+    setGoals((prev) => [...prev, newGoal]);
   };
 
   const handleContribute = (goalId: string, amount: number) => {
-    setGoals(prev => prev.map(goal =>
-      goal.id === goalId
-        ? { ...goal, currentAmount: goal.currentAmount + amount }
-        : goal
-    ));
+    const newContribution: Contribution = {
+      id: Math.random().toString(36).substring(2, 11),
+      goalId,
+      amount,
+      source: 'manual',
+      createdAt: new Date(),
+    };
+    addContribution(newContribution);
+    setContributions((prev) => [...prev, newContribution]);
+    setGoals((prev) =>
+      prev.map((goal) =>
+        goal.id === goalId
+          ? { ...goal, currentAmount: goal.currentAmount + amount }
+          : goal,
+      ),
+    );
+  };
+
+  const handleUpdateSchedule = (goalId: string, schedule: GoalSchedule | undefined) => {
+    setGoals((prev) =>
+      prev.map((goal) =>
+        goal.id === goalId ? { ...goal, schedule } : goal,
+      ),
+    );
+  };
+
+  const handleUpdateRoundUpRule = (goalId: string, rule: RoundUpRule) => {
+    setGoals((prev) =>
+      prev.map((goal) =>
+        goal.id === goalId ? { ...goal, roundUpRule: rule } : goal,
+      ),
+    );
   };
 
   return (
@@ -101,12 +228,15 @@ export default function DashboardPage() {
           </div>
         ) : (
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {goals.map(goal => (
+            {goals.map((goal) => (
               <ContributionWidget
                 key={goal.id}
                 goal={goal}
+                contributions={contributions}
                 onContribute={handleContribute}
                 availableBalance={availableBalance}
+                onUpdateSchedule={handleUpdateSchedule}
+                onUpdateRoundUpRule={handleUpdateRoundUpRule}
               />
             ))}
           </div>
