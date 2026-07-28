@@ -1,9 +1,11 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { z } from "zod";
 import { useForm } from "@/hooks/useForm";
 import { useOffline } from "@/components/offline/OfflineProvider";
+import { createSchedule } from "@/lib/savings/scheduler";
+import type { GoalSchedule } from "@/lib/types/savings";
 
 const goalSchema = z.object({
     title: z.string().min(1, 'Goal title is required').max(100, 'Title is too long'),
@@ -18,6 +20,11 @@ const goalSchema = z.object({
         message: 'Deadline must be a future date',
     }),
     recurrence: z.enum(['once', 'monthly', 'yearly']),
+    contributionAmount: z.coerce
+        .number()
+        .positive('Contribution amount must be positive')
+        .min(0.01, 'Minimum contribution is 0.01 XLM')
+        .optional(),
 });
 
 type GoalFormData = z.infer<typeof goalSchema>;
@@ -25,16 +32,18 @@ type GoalFormData = z.infer<typeof goalSchema>;
 interface GoalFormProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
-    onGoalCreated: (goal: GoalFormData) => void;
+    onGoalCreated: (goal: GoalFormData & { schedule?: GoalSchedule }) => void;
 }
 
 export default function GoalForm({ open, onOpenChange, onGoalCreated }: GoalFormProps) {
     const { isOnline, queueAction } = useOffline();
+    const [showContributionAmount, setShowContributionAmount] = useState(false);
     const {
         register,
         handleSubmit,
         formState: { errors, isValid, isSubmitting },
         reset,
+        watch,
     } = useForm<GoalFormData>({
         schema: goalSchema,
         defaultValues: {
@@ -42,9 +51,16 @@ export default function GoalForm({ open, onOpenChange, onGoalCreated }: GoalForm
             targetAmount: 0,
             deadline: '',
             recurrence: 'once',
+            contributionAmount: 0,
         },
         mode: 'onChange',
     });
+
+    const recurrenceValue = watch('recurrence');
+
+    React.useEffect(() => {
+        setShowContributionAmount(recurrenceValue !== 'once');
+    }, [recurrenceValue]);
 
     const onSubmit = async (data: GoalFormData) => {
         if (!isOnline) {
@@ -55,11 +71,15 @@ export default function GoalForm({ open, onOpenChange, onGoalCreated }: GoalForm
             return;
         }
 
-        // Simulate API call
-        console.log('Goal submitted:', data);
+        let schedule: GoalSchedule | undefined;
+        if (data.recurrence !== 'once' && data.contributionAmount && data.contributionAmount > 0) {
+            schedule = createSchedule(data.recurrence, data.contributionAmount);
+        }
+
+        console.log('Goal submitted:', { data, schedule });
         await new Promise((resolve) => setTimeout(resolve, 1000));
         alert('Savings goal created successfully!');
-        onGoalCreated(data);
+        onGoalCreated({ ...data, schedule });
         reset();
         onOpenChange(false);
     };
@@ -145,6 +165,29 @@ export default function GoalForm({ open, onOpenChange, onGoalCreated }: GoalForm
                             <p className="text-xs text-red-500 mt-1">{errors.recurrence.message}</p>
                         )}
                     </div>
+
+                    {showContributionAmount && (
+                        <div className="space-y-1">
+                            <label htmlFor="contributionAmount" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                Contribution Amount (XLM)
+                            </label>
+                            <input
+                                id="contributionAmount"
+                                type="number"
+                                step="0.01"
+                                {...register('contributionAmount')}
+                                className={`w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-green-500 outline-none transition-all ${errors.contributionAmount ? 'border-red-500 bg-red-50' : 'border-gray-300 dark:border-gray-600 dark:bg-gray-700'
+                                    }`}
+                                placeholder="e.g. 50"
+                            />
+                            <p className="text-xs text-gray-500 dark:text-gray-400">
+                                Amount to contribute each {recurrenceValue === 'monthly' ? 'month' : 'year'}
+                            </p>
+                            {errors.contributionAmount && (
+                                <p className="text-xs text-red-500 mt-1">{errors.contributionAmount.message}</p>
+                            )}
+                        </div>
+                    )}
 
                     <div className="flex justify-end gap-2 pt-4">
                         <button
