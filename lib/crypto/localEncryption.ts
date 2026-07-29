@@ -1,0 +1,250 @@
+/**
+ * Local encryption utility using WebCrypto API
+ * Uses PBKDF2 for key derivation and AES-GCM for encryption
+ */
+
+export interface EncryptionConfig {
+  passphrase: string;
+  salt?: string;
+}
+
+const SALT_LENGTH = 16;
+const IV_LENGTH = 12;
+const KEY_LENGTH = 256;
+const ITERATIONS = 100000;
+
+const STORAGE_KEYS = {
+  ENCRYPTED_PREFIX: 'stellarspend_encrypted_',
+  SALT_KEY: 'stellarspend_encryption_salt',
+  PASSPHRASE_SET: 'stellarspend_passphrase_set',
+} as const;
+
+/**
+ * Generate a random salt
+ */
+export function generateSalt(): string {
+  const array = new Uint8Array(SALT_LENGTH);
+  crypto.getRandomValues(array);
+  return Array.from(array).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+/**
+ * Derive an encryption key from a passphrase and salt
+ */
+async function deriveKey(passphrase: string, salt: string): Promise<CryptoKey> {
+  const encoder = new TextEncoder();
+  const keyMaterial = await crypto.subtle.importKey(
+    'raw',
+    encoder.encode(passphrase),
+    'PBKDF2',
+    false,
+    ['deriveKey']
+  );
+
+  return crypto.subtle.deriveKey(
+    {
+      name: 'PBKDF2',
+      salt: encoder.encode(salt),
+      iterations: ITERATIONS,
+      hash: 'SHA-256',
+    },
+    keyMaterial,
+    {
+      name: 'AES-GCM',
+      length: KEY_LENGTH,
+    },
+    false,
+    ['encrypt', 'decrypt']
+  );
+}
+
+/**
+ * Encrypt data with a passphrase
+ */
+export async function encryptData(data: unknown, passphrase: string): Promise<string> {
+  const salt = generateSalt();
+  const key = await deriveKey(passphrase, salt);
+
+  const encoder = new TextEncoder();
+  const iv = crypto.getRandomValues(new Uint8Array(IV_LENGTH));
+  const encodedData = encoder.encode(JSON.stringify(data));
+
+  const encrypted = await crypto.subtle.encrypt(
+    {
+      name: 'AES-GCM',
+      iv,
+    },
+    key,
+    encodedData
+  );
+
+  // Combine salt + iv + encrypted data, all as base64
+  const combined = new Uint8Array(salt.length + iv.length + encrypted.byteLength);
+  combined.set(new TextEncoder().encode(salt), 0);
+  combined.set(iv, salt.length);
+  combined.set(new Uint8Array(encrypted), salt.length + iv.length);
+
+  return btoa(String.fromCharCode(...combined));
+}
+
+/**
+ * Decrypt data with a passphrase
+ */
+export async function decryptData<T>(encryptedData: string, passphrase: string): Promise<T> {
+  const combined = Uint8Array.from(atob(encryptedData), c => c.charCodeAt(0));
+
+  const salt = new TextDecoder().decode(combined.slice(0, SALT_LENGTH));
+  const iv = combined.slice(SALT_LENGTH, SALT_LENGTH + IV_LENGTH);
+  const encrypted = combined.slice(SALT_LENGTH + IV_LENGTH);
+
+  const key = await deriveKey(passphrase, salt);
+
+  const decrypted = await crypto.subtle.decrypt(
+    {
+      name: 'AES-GCM',
+      iv,
+    },
+    key,
+    encrypted
+  );
+
+  const decoder = new TextDecoder();
+  return JSON.parse(decoder.decode(decrypted));
+}
+
+/**
+ * Save encrypted data to localStorage
+ */
+export async function saveEncrypted(key: string, data: unknown, passphrase: string): Promise<void> {
+  const encrypted = await encryptData(data, passphrase);
+  localStorage.setItem(STORAGE_KEYS.ENCRYPTED_PREFIX + key, encrypted);
+}
+
+/**
+ * Load and decrypt data from localStorage
+ */
+export async function loadEncrypted<T>(key: string, passphrase: string): Promise<T | null> {
+  const encrypted = localStorage.getItem(STORAGE_KEYS.ENCRYPTED_PREFIX + key);
+  if (!encrypted) return null;
+  try {
+    return await decryptData<T>(encrypted, passphrase);
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Check if data is encrypted (vs plaintext)
+ */
+export function isEncrypted(key: string): boolean {
+  const data = localStorage.getItem(key);
+  if (!data) return false;
+  // Encrypted data starts with base64 characters and has length > 50
+  return data.length > 50 && /^[A-Za-z0-9+/=]+$/.test(data);
+}
+
+/**
+ * Save plaintext data (migration helper)
+ */
+export function savePlaintext(key: string, data: unknown): void {
+  localStorage.setItem(key, JSON.stringify(data));
+}
+
+/**
+ * Load plaintext data (migration helper)
+ */
+export function loadPlaintext<T>(key: string): T | null {
+  const data = localStorage.getItem(key);
+  if (!data) return null;
+  try {
+    return JSON.parse(data);
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Remove stored data
+ */
+export function removeStoredData(key: string): void {
+  localStorage.removeItem(key);
+  localStorage.removeItem(STORAGE_KEYS.ENCRYPTED_PREFIX + key);
+}
+
+/**
+ * Check if passphrase is set
+ */
+export function isPassphraseSet(): boolean {
+  return localStorage.getItem(STORAGE_KEYS.PASSPHRASE_SET) === 'true';
+}
+
+/**
+ * Set passphrase flag
+ */
+export function setPassphraseSet(): void {
+  localStorage.setItem(STORAGE_KEYS.PASSPHRASE_SET, 'true');
+}
+
+/**
+ * Reset encryption (forgot passphrase recovery)
+ */
+export function resetEncryption(): void {
+  // Get all encrypted keys
+  const keys: string[] = [];
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (key && key.startsWith(STORAGE_KEYS.ENCRYPTED_PREFIX)) {
+      keys.push(key);
+    }
+  }
+  // Remove encrypted data
+  keys.forEach(key => localStorage.removeItem(key));
+  localStorage.removeItem(STORAGE_KEYS.SALT_KEY);
+  localStorage.removeItem(STORAGE_KEYS.PASSPHRASE_SET);
+}
+
+/**
+ * Check if data is encrypted vs plaintext by looking at the raw data
+ */
+export function detectPlaintextData(key: string): boolean {
+  const data = localStorage.getItem(key);
+  if (!data) return false;
+  // If it's plaintext, it should be valid JSON
+  try {
+    JSON.parse(data);
+    // If it parses as JSON and looks like our data structure (not encrypted)
+    // Encrypted data will fail JSON.parse or be a long base64 string
+    if (data.length > 100 && /^[A-Za-z0-9+/=]+$/.test(data.substring(0, 100))) {
+      return false;
+    }
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Migrate plaintext data to encrypted
+ */
+export async function migrateToEncrypted(
+  key: string,
+  passphrase: string,
+  data?: unknown
+): Promise<boolean> {
+  // If data is provided, just save it encrypted
+  if (data !== undefined) {
+    await saveEncrypted(key, data, passphrase);
+    localStorage.removeItem(key);
+    return true;
+  }
+
+  // Otherwise, try to load plaintext data
+  const plaintext = loadPlaintext(key);
+  if (plaintext === null) {
+    return false;
+  }
+
+  await saveEncrypted(key, plaintext, passphrase);
+  localStorage.removeItem(key);
+  return true;
+}
