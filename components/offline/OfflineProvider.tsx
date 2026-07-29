@@ -103,8 +103,12 @@ export function OfflineProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
+  // Fixed: Wrap loadQueue in an async init function
   useEffect(() => {
-    loadQueue();
+    const init = async () => {
+      await loadQueue();
+    };
+    init();
   }, [loadQueue]);
 
   useEffect(() => {

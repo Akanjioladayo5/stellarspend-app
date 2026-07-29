@@ -10,7 +10,6 @@ import {
   isPassphraseSet,
   setPassphraseSet,
   resetEncryption,
-  STORAGE_KEYS,
 } from "../lib/crypto/localEncryption";
 
 export interface Wallet {
