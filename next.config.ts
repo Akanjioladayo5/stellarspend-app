@@ -23,6 +23,26 @@ const nextConfig: NextConfig = {
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
   },
+  turbopack: {
+    resolveAlias: {
+      '@aztec/bb.js': './lib/zk/mockWorkerThreads.ts',
+      '@noir-lang/noir_js': './lib/zk/mockWorkerThreads.ts',
+      '@noir-lang/acvm_js': './lib/zk/mockWorkerThreads.ts',
+      '@noir-lang/noirc_abi': './lib/zk/mockWorkerThreads.ts',
+    },
+  },
+  webpack: (config, { isServer }) => {
+    if (!isServer) {
+      config.resolve.alias = {
+        ...config.resolve.alias,
+        '@aztec/bb.js': false,
+        '@noir-lang/noir_js': false,
+        '@noir-lang/acvm_js': false,
+        '@noir-lang/noirc_abi': false,
+      };
+    }
+    return config;
+  },
 };
 
 export default nextConfig;
