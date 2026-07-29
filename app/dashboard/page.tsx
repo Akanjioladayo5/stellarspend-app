@@ -1,190 +1,139 @@
 'use client'
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import BalancesWidget from "@/components/dashboard/BalancesWidget";
 import QuickActions from "@/components/dashboard/QuickActions";
 import RecentTransactions from "@/components/dashboard/RecentTransactions";
 import GoalForm from "@/components/savings/GoalForm";
 import { ContributionWidget } from "@/components/savings/ContributionWidget";
+import useWallet from "@/hooks/useWallet";
+import { useOffline } from "@/components/offline/OfflineProvider";
+import type { Goal, Contribution, GoalSchedule, RoundUpRule } from "@/lib/types/savings";
 import {
-  loadGoals,
-  saveGoals,
-  loadContributions,
-  addContribution,
-  checkAndExecuteDueContributions,
-} from "@/lib/savings/scheduler";
-import { calculateRoundUp } from "@/lib/savings/roundUp";
-import type {
-  Goal,
-  GoalSchedule,
-  GoalFormData,
-  RoundUpRule,
-  Contribution,
-} from "@/lib/types/savings";
-import { MOCK_TRANSACTIONS } from "@/lib/api/client";
+  fetchGoals,
+  contributeToGoal,
+  getMockGoalsFallback,
+  getContributionHistoryOnChain,
+  setRoundUpRuleOnChain,
+  pauseScheduleOnChain,
+  resumeScheduleOnChain,
+  cancelScheduleOnChain,
+} from "@/lib/stellar/savingsGoalContract";
 
 export default function DashboardPage() {
-  const [goals, setGoals] = useState<Goal[]>(() => {
-    if (typeof window === 'undefined') {
-      return [
-        {
-          id: '1',
-          name: 'New Laptop',
-          targetAmount: 1200,
-          currentAmount: 300,
-          deadline: '2024-12-31',
-          recurrence: 'once' as const,
-          createdAt: new Date(),
-        },
-      ];
-    }
-    const savedGoals = loadGoals();
-    return savedGoals.length > 0
-      ? savedGoals
-      : [
-          {
-            id: '1',
-            name: 'New Laptop',
-            targetAmount: 1200,
-            currentAmount: 300,
-            deadline: '2024-12-31',
-            recurrence: 'once' as const,
-            createdAt: new Date(),
-          },
-        ];
-  });
-  const [contributions, setContributions] = useState<Contribution[]>(() => {
-    if (typeof window === 'undefined') return [];
-    return loadContributions();
-  });
+  const { freighter } = useWallet();
+  const publicKey = freighter.publicKey;
+  const { isOnline, queueAction } = useOffline();
+
+  const [goals, setGoals] = useState<Goal[]>([]);
+  const [contributions, setContributions] = useState<Contribution[]>([]);
   const [goalModalOpen, setGoalModalOpen] = useState(false);
   const availableBalance = 500;
 
   useEffect(() => {
-    saveGoals(goals);
-  }, [goals]);
-
-  const processRoundUps = useCallback(() => {
-    const goalsWithRoundUp = goals.filter(
-      (g) => g.roundUpRule?.enabled && !g.roundUpRule.paused,
-    );
-    if (goalsWithRoundUp.length === 0) return;
-
-    MOCK_TRANSACTIONS.forEach((tx) => {
-      if (!tx.successful) return;
-      const paymentOp = tx.operations.find(
-        (op) => op.type === 'payment' && op.amount,
-      );
-      if (!paymentOp?.amount) return;
-
-      const txAmount = parseFloat(paymentOp.amount);
-
-      goalsWithRoundUp.forEach((goal) => {
-        if (goal.currentAmount >= goal.targetAmount) return;
-
-        const roundUpAmount = calculateRoundUp(
-          txAmount,
-          goal.roundUpRule!.nearestUnit,
-        );
-        if (roundUpAmount <= 0) return;
-
-        const alreadyProcessed = contributions.some(
-          (c) =>
-            c.goalId === goal.id &&
-            c.transactionHash === tx.hash &&
-            c.source === 'round-up',
-        );
-        if (alreadyProcessed) return;
-
-        const newContribution: Contribution = {
-          id: Math.random().toString(36).substring(2, 11),
-          goalId: goal.id,
-          amount: roundUpAmount,
-          source: 'round-up',
-          transactionHash: tx.hash,
-          createdAt: new Date(),
-        };
-
-        addContribution(newContribution);
-        setContributions((prev) => [...prev, newContribution]);
-        setGoals((prev) =>
-          prev.map((g) =>
-            g.id === goal.id
-              ? { ...g, currentAmount: g.currentAmount + roundUpAmount }
-              : g,
-          ),
-        );
-      });
-    });
-  }, [goals, contributions]);
-
-  useEffect(() => {
-    processRoundUps();
-    const interval = setInterval(() => {
-      processRoundUps();
-    }, 30000);
-    return () => clearInterval(interval);
-  }, [processRoundUps]);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      const { updatedGoals, executedContributions } =
-        checkAndExecuteDueContributions(goals, availableBalance);
-      if (executedContributions.length > 0) {
-        setGoals(updatedGoals);
-        setContributions((prev) => [...prev, ...executedContributions]);
+    async function loadGoals() {
+      if (publicKey) {
+        try {
+          const contractGoals = await fetchGoals(publicKey);
+          setGoals(contractGoals);
+        } catch (e) {
+          console.error(e);
+          setGoals(getMockGoalsFallback());
+        }
+      } else {
+        setGoals(getMockGoalsFallback());
       }
-    }, 60000);
-    return () => clearInterval(interval);
-  }, [goals, availableBalance]);
+    }
+    loadGoals();
+  }, [publicKey]);
 
-  const handleGoalCreated = (goalData: GoalFormData & { schedule?: GoalSchedule }) => {
-    const newGoal: Goal = {
-      id: Math.random().toString(36).substring(2, 11),
-      name: goalData.title,
-      targetAmount: goalData.targetAmount,
-      currentAmount: 0,
-      deadline: goalData.deadline,
-      recurrence: goalData.recurrence,
-      createdAt: new Date(),
-      schedule: goalData.schedule,
-    };
-    setGoals((prev) => [...prev, newGoal]);
+  // Load contributions for goals
+  useEffect(() => {
+    async function loadAllContributions() {
+      if (publicKey && goals.length > 0) {
+        try {
+          const allContribs: Contribution[] = [];
+          for (const goal of goals) {
+            try {
+              const history = await getContributionHistoryOnChain(goal.id, publicKey);
+              allContribs.push(...history);
+            } catch (err) {
+              console.error(`Failed to fetch history for goal ${goal.id}:`, err);
+            }
+          }
+          setContributions(allContribs);
+        } catch (e) {
+          console.error("Failed to load contribution history:", e);
+        }
+      }
+    }
+    loadAllContributions();
+  }, [goals, publicKey]);
+
+  const handleGoalCreated = (newGoal: Goal) => {
+    setGoals(prev => [...prev, newGoal]);
   };
 
-  const handleContribute = (goalId: string, amount: number) => {
-    const newContribution: Contribution = {
-      id: Math.random().toString(36).substring(2, 11),
-      goalId,
-      amount,
-      source: 'manual',
-      createdAt: new Date(),
-    };
-    addContribution(newContribution);
-    setContributions((prev) => [...prev, newContribution]);
-    setGoals((prev) =>
-      prev.map((goal) =>
+  const handleContribute = async (goalId: string, amount: number) => {
+    if (!isOnline) {
+      queueAction('CONTRIBUTE_GOAL', `Contribute to goal: ${goalId}`, { goalId, amount });
+      alert('You are offline. Your contribution has been queued.');
+      // Optimistic UI update
+      setGoals(prev => prev.map(goal =>
         goal.id === goalId
           ? { ...goal, currentAmount: goal.currentAmount + amount }
-          : goal,
-      ),
-    );
+          : goal
+      ));
+      return;
+    }
+
+    if (publicKey) {
+      try {
+        await contributeToGoal(publicKey, goalId, amount);
+        const contractGoals = await fetchGoals(publicKey);
+        setGoals(contractGoals);
+      } catch (e: unknown) {
+        const errMessage = e instanceof Error ? e.message : String(e);
+        alert(`Failed to contribute: ${errMessage}`);
+      }
+    } else {
+      // Fallback
+      setGoals(prev => prev.map(goal =>
+        goal.id === goalId
+          ? { ...goal, currentAmount: goal.currentAmount + amount }
+          : goal
+      ));
+    }
   };
 
-  const handleUpdateSchedule = (goalId: string, schedule: GoalSchedule | undefined) => {
-    setGoals((prev) =>
-      prev.map((goal) =>
-        goal.id === goalId ? { ...goal, schedule } : goal,
-      ),
-    );
+  const handleUpdateSchedule = async (goalId: string, schedule: GoalSchedule | undefined) => {
+    if (publicKey) {
+      try {
+        if (!schedule) {
+          await cancelScheduleOnChain(goalId, publicKey);
+        } else if (schedule.paused) {
+          await pauseScheduleOnChain(goalId, publicKey);
+        } else {
+          await resumeScheduleOnChain(goalId, publicKey);
+        }
+        const contractGoals = await fetchGoals(publicKey);
+        setGoals(contractGoals);
+      } catch (e) {
+        console.error("Failed to update schedule:", e);
+      }
+    }
   };
 
-  const handleUpdateRoundUpRule = (goalId: string, rule: RoundUpRule) => {
-    setGoals((prev) =>
-      prev.map((goal) =>
-        goal.id === goalId ? { ...goal, roundUpRule: rule } : goal,
-      ),
-    );
+  const handleUpdateRoundUpRule = async (goalId: string, rule: RoundUpRule) => {
+    if (publicKey) {
+      try {
+        await setRoundUpRuleOnChain(goalId, rule.enabled, rule.nearestUnit, publicKey);
+        const contractGoals = await fetchGoals(publicKey);
+        setGoals(contractGoals);
+      } catch (e) {
+        console.error("Failed to update round-up rule:", e);
+      }
+    }
   };
 
   return (

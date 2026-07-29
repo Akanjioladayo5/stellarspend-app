@@ -49,8 +49,8 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased font-sans`}
       >
         <I18nProvider initialLanguage="en">
-          <ClientLayout>
-            <NotificationProvider>
+          <NotificationProvider>
+            <ClientLayout>
               <WalletProvider>
                 {/* Skip-to-content link for keyboard accessibility */}
                 <a
@@ -71,8 +71,8 @@ export default function RootLayout({
                 <Footer />
                 <Toaster />
               </WalletProvider>
-            </NotificationProvider>
-          </ClientLayout>
+            </ClientLayout>
+          </NotificationProvider>
         </I18nProvider>
       </body>
     </html>

@@ -4,6 +4,39 @@
  * Replace with real Stellar Horizon calls in production.
  */
 
+import {
+  fetchBudgets as fetchContractBudgets,
+  createBudget as createContractBudget,
+  updateBudget as updateContractBudget,
+  deleteBudget as deleteContractBudget,
+  getMockBudgetsFallback,
+  setMockBudgetsFallback,
+} from '@/lib/stellar/budgetContract';
+
+interface LocalWallet {
+  id: string;
+  publicKey?: string;
+}
+
+export function getConnectedPublicKey(): string | null {
+  if (typeof window === 'undefined') return null;
+  const selectedWalletId = localStorage.getItem('stellarspend_selected_wallet');
+  const walletsStr = localStorage.getItem('stellarspend_wallets');
+  if (selectedWalletId && walletsStr) {
+    try {
+      const wallets = JSON.parse(walletsStr);
+      const selected = wallets.find((w: LocalWallet) => w.id === selectedWalletId);
+      if (selected && selected.publicKey) {
+        return selected.publicKey;
+      }
+    } catch (e) {
+      console.error('Failed to parse wallets from localStorage', e);
+    }
+  }
+  return null;
+}
+
+
 export interface AssetBalance {
   asset: "XLM" | "USDC" | "EURC";
   balance: string;
@@ -512,8 +545,11 @@ export async function fetchRecentTransactions(
  * Fetch all budgets (mock — 200 ms latency).
  */
 export async function fetchBudgets(): Promise<Budget[]> {
-  await delay(200);
-  return [...MOCK_BUDGETS];
+  const publicKey = getConnectedPublicKey();
+  if (publicKey) {
+    return fetchContractBudgets(publicKey);
+  }
+  return getMockBudgetsFallback();
 }
 
 /**
@@ -522,14 +558,19 @@ export async function fetchBudgets(): Promise<Budget[]> {
 export async function createBudget(
   budgetData: Omit<Budget, "id" | "createdAt" | "updatedAt">,
 ): Promise<Budget> {
-  await delay(500);
+  const publicKey = getConnectedPublicKey();
+  if (publicKey) {
+    return createContractBudget(publicKey, budgetData);
+  }
+  const mockBudgets = getMockBudgetsFallback();
   const newBudget: Budget = {
     ...budgetData,
     id: `budget_${Date.now()}`,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   };
-  MOCK_BUDGETS.push(newBudget);
+  mockBudgets.push(newBudget);
+  setMockBudgetsFallback(mockBudgets);
   return newBudget;
 }
 
@@ -540,30 +581,33 @@ export async function updateBudget(
   id: string,
   budgetData: Partial<Omit<Budget, "id" | "createdAt">>,
 ): Promise<Budget> {
-  await delay(400);
-  const budgetIndex = MOCK_BUDGETS.findIndex((b) => b.id === id);
+  const publicKey = getConnectedPublicKey();
+  if (publicKey) {
+    return updateContractBudget(publicKey, id, budgetData);
+  }
+  const mockBudgets = getMockBudgetsFallback();
+  const budgetIndex = mockBudgets.findIndex((b) => b.id === id);
   if (budgetIndex === -1) {
     throw new Error("Budget not found");
   }
-
-  MOCK_BUDGETS[budgetIndex] = {
-    ...MOCK_BUDGETS[budgetIndex],
+  mockBudgets[budgetIndex] = {
+    ...mockBudgets[budgetIndex],
     ...budgetData,
     updatedAt: new Date().toISOString(),
   };
-
-  return MOCK_BUDGETS[budgetIndex];
+  setMockBudgetsFallback(mockBudgets);
+  return mockBudgets[budgetIndex];
 }
 
 /**
  * Delete a budget (mock — 300 ms latency).
  */
 export async function deleteBudget(id: string): Promise<void> {
-  await delay(300);
-  const budgetIndex = MOCK_BUDGETS.findIndex((b) => b.id === id);
-  if (budgetIndex === -1) {
-    throw new Error("Budget not found");
+  const publicKey = getConnectedPublicKey();
+  if (publicKey) {
+    return deleteContractBudget(publicKey, id);
   }
-
-  MOCK_BUDGETS.splice(budgetIndex, 1);
+  const mockBudgets = getMockBudgetsFallback();
+  const filtered = mockBudgets.filter((b) => b.id !== id);
+  setMockBudgetsFallback(filtered);
 }

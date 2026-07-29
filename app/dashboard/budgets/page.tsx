@@ -9,6 +9,8 @@ import {
   Budget,
 } from "@/lib/api/client";
 import BudgetForm from "@/components/budgets/BudgetForm";
+import { useOffline } from "@/components/offline/OfflineProvider";
+
 
 interface BudgetFormData {
   name: string;
@@ -20,6 +22,7 @@ interface BudgetFormData {
 }
 
 export default function BudgetsPage() {
+    const { isOnline, queueAction } = useOffline();
     const [budgets, setBudgets] = useState<Budget[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -29,6 +32,7 @@ export default function BudgetsPage() {
     useEffect(() => {
         loadBudgets();
     }, []);
+
 
     const loadBudgets = async () => {
         try {
@@ -45,6 +49,21 @@ export default function BudgetsPage() {
     };
 
     const handleCreateBudget = async (budgetData: Omit<Budget, 'id' | 'createdAt' | 'updatedAt'>) => {
+        if (!isOnline) {
+            queueAction('CREATE_BUDGET', `Create budget: ${budgetData.name}`, budgetData);
+            alert('You are offline. Your budget has been queued and will be saved when you reconnect.');
+            // Optimistic update
+            const tempBudget: Budget = {
+                ...budgetData,
+                id: `temp_${Date.now()}`,
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString()
+            };
+            setBudgets(prev => [...prev, tempBudget]);
+            setShowForm(false);
+            return;
+        }
+
         try {
             const newBudget = await createBudget(budgetData);
             setBudgets(prev => [...prev, newBudget]);
@@ -58,6 +77,16 @@ export default function BudgetsPage() {
     const handleUpdateBudget = async (budgetData: Omit<Budget, 'id' | 'createdAt' | 'updatedAt'>) => {
         if (!editingBudget) return;
         
+        if (!isOnline) {
+            queueAction('UPDATE_BUDGET', `Update budget: ${budgetData.name}`, { id: editingBudget.id, ...budgetData });
+            alert('You are offline. Your budget updates have been queued.');
+            // Optimistic update
+            setBudgets(prev => prev.map(b => b.id === editingBudget.id ? { ...b, ...budgetData } : b));
+            setEditingBudget(null);
+            setShowForm(false);
+            return;
+        }
+
         try {
             const updatedBudget = await updateBudget(editingBudget.id, budgetData);
             setBudgets(prev => prev.map(b => b.id === editingBudget.id ? updatedBudget : b));
@@ -72,6 +101,13 @@ export default function BudgetsPage() {
     const handleDeleteBudget = async (id: string) => {
         if (!confirm('Are you sure you want to delete this budget?')) return;
         
+        if (!isOnline) {
+            queueAction('DELETE_BUDGET', `Delete budget: ${id}`, { id });
+            alert('You are offline. Your deletion request has been queued.');
+            setBudgets(prev => prev.filter(b => b.id !== id));
+            return;
+        }
+
         try {
             await deleteBudget(id);
             setBudgets(prev => prev.filter(b => b.id !== id));
