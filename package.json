@@ -13,7 +13,11 @@
     "test:e2e": "cypress run --headless"
   },
   "dependencies": {
+    "@aztec/bb.js": "^0.30.0",
     "@hookform/resolvers": "^5.2.2",
+    "@noir-lang/acvm_js": "^0.30.0",
+    "@noir-lang/noirc_abi": "^0.30.0",
+    "@noir-lang/noir_js": "^0.30.0",
     "@stellar/stellar-sdk": "^16.1.0",
     "date-fns": "^4.1.0",
     "framer-motion": "^12.34.3",

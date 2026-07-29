@@ -1,9 +1,9 @@
 "use client";
 
 import React, { useState } from 'react';
-import { useOffline, QueuedAction } from './OfflineProvider';
-import { RefreshCw, Trash2, Clock, History, X, Send, Download, PieChart, Target } from 'lucide-react';
+import { X, Send, Download, PieChart, Target } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import SendPaymentModal from '../transactions/SendPaymentModal';
 
 // Module-level constant — Math.random() runs once when the module loads,
 // never during a component render, so the react-hooks/purity rule is satisfied.
@@ -11,72 +11,6 @@ const QR_CELLS: readonly boolean[] = Array.from(
   { length: 16 },
   () => Math.random() > 0.5,
 );
-
-// ─── Mini Send Modal ────────────────────────────────────────────────────────
-function SendModal({ onClose }: { onClose: () => void }) {
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div
-        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-        onClick={onClose}
-      />
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95, y: 20 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.95, y: 20 }}
-        className="relative z-10 w-full max-w-md rounded-3xl bg-[#0d1420] border border-white/10 shadow-2xl p-8"
-      >
-        <button
-          onClick={onClose}
-          className="absolute top-5 right-5 text-[#7a8aaa] hover:text-white transition-colors"
-        >
-          <X className="w-5 h-5" />
-        </button>
-        <h2 className="text-2xl font-bold text-white mb-1">Send Assets</h2>
-        <p className="text-[#7a8aaa] text-sm mb-6">
-          Transfer XLM, USDC or EURC on Stellar.
-        </p>
-        <div className="space-y-4">
-          <div>
-            <label className="text-[#7a8aaa] text-xs uppercase tracking-widest mb-2 block">
-              Recipient Address
-            </label>
-            <input
-              type="text"
-              placeholder="G…"
-              className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-[#7a8aaa]/50 focus:outline-none focus:ring-2 focus:ring-[#e8b84b]/30 focus:border-[#e8b84b]/40 transition-all"
-            />
-          </div>
-          <div className="flex gap-3">
-            <div className="flex-1">
-              <label className="text-[#7a8aaa] text-xs uppercase tracking-widest mb-2 block">
-                Amount
-              </label>
-              <input
-                type="number"
-                placeholder="0.00"
-                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-[#7a8aaa]/50 focus:outline-none focus:ring-2 focus:ring-[#e8b84b]/30 focus:border-[#e8b84b]/40 transition-all"
-              />
-            </div>
-            <div className="w-28">
-              <label className="text-[#7a8aaa] text-xs uppercase tracking-widest mb-2 block">
-                Asset
-              </label>
-              <select className="w-full px-3 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-[#e8b84b]/30 transition-all">
-                <option value="XLM">XLM</option>
-                <option value="USDC">USDC</option>
-                <option value="EURC">EURC</option>
-              </select>
-            </div>
-          </div>
-          <button className="w-full py-3 bg-[#e8b84b] text-[#1a0f00] font-bold rounded-xl hover:bg-[#f0c85a] transition-all hover:-translate-y-0.5 shadow-lg shadow-[#e8b84b]/20 active:translate-y-0 mt-2">
-            Send Payment
-          </button>
-        </div>
-      </motion.div>
-    </div>
-  );
-}
 
 // ─── Mini Receive Modal ──────────────────────────────────────────────────────
 function ReceiveModal({ onClose }: { onClose: () => void }) {
@@ -329,7 +263,7 @@ export default function QuickActions() {
 
       <AnimatePresence>
         {openModal === "send" && (
-          <SendModal onClose={() => setOpenModal(null)} />
+          <SendPaymentModal onClose={() => setOpenModal(null)} />
         )}
         {openModal === "receive" && (
           <ReceiveModal onClose={() => setOpenModal(null)} />
