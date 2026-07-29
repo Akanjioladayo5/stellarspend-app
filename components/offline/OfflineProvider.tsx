@@ -1,6 +1,13 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, { createContext, useContext, useEffect, useState, useCallback } from "react";
+import {
+  saveEncrypted,
+  loadEncrypted,
+  loadPlaintext,
+  migrateToEncrypted,
+  detectPlaintextData,
+} from "../../lib/crypto/localEncryption";
 
 /**
  * Represents a pending action that was queued while offline.
@@ -20,26 +27,64 @@ interface OfflineContextType {
   removeAction: (id: string) => void;
   retryQueuedActions: () => void;
   clearQueue: () => void;
+  isUnlocked: boolean;
+  unlockQueue: (passphrase: string) => Promise<boolean>;
 }
 
 const OfflineContext = createContext<OfflineContextType | undefined>(undefined);
 const QUEUE_STORAGE_KEY = "stellarspend_offline_queue";
 
-function loadQueue(): QueuedAction[] {
+// Shared passphrase reference - set by WalletContext
+let sharedPassphrase: string | null = null;
+
+export function setQueuePassphrase(passphrase: string) {
+  sharedPassphrase = passphrase;
+}
+
+export function clearQueuePassphrase() {
+  sharedPassphrase = null;
+}
+
+async function loadQueueData(passphrase?: string): Promise<QueuedAction[]> {
   if (typeof window === "undefined") {
     return [];
   }
 
-  const savedQueue = localStorage.getItem(QUEUE_STORAGE_KEY);
-  if (!savedQueue) {
-    return [];
+  // First, check if there's plaintext data that needs migration
+  const hasPlaintext = detectPlaintextData(QUEUE_STORAGE_KEY);
+
+  if (hasPlaintext && passphrase) {
+    const plaintextData = loadPlaintext<QueuedAction[]>(QUEUE_STORAGE_KEY);
+    if (plaintextData) {
+      await migrateToEncrypted(QUEUE_STORAGE_KEY, passphrase, plaintextData);
+      return plaintextData;
+    }
   }
 
-  try {
-    return JSON.parse(savedQueue) as QueuedAction[];
-  } catch (error) {
-    console.error("Failed to parse offline queue", error);
-    return [];
+  // Try to load encrypted data
+  if (passphrase) {
+    const encrypted = await loadEncrypted<QueuedAction[]>(QUEUE_STORAGE_KEY, passphrase);
+    if (encrypted) {
+      return encrypted;
+    }
+  }
+
+  // Fallback to plaintext
+  const plaintext = loadPlaintext<QueuedAction[]>(QUEUE_STORAGE_KEY);
+  return plaintext || [];
+}
+
+async function saveQueueData(data: QueuedAction[], passphrase?: string): Promise<void> {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  if (passphrase) {
+    await saveEncrypted(QUEUE_STORAGE_KEY, data, passphrase);
+    // Clear plaintext
+    localStorage.removeItem(QUEUE_STORAGE_KEY);
+  } else {
+    localStorage.setItem(QUEUE_STORAGE_KEY, JSON.stringify(data));
   }
 }
 
@@ -47,7 +92,24 @@ export function OfflineProvider({ children }: { children: React.ReactNode }) {
   const [isOnline, setIsOnline] = useState<boolean>(
     () => (typeof navigator !== "undefined" ? navigator.onLine : true),
   );
-  const [queuedActions, setQueuedActions] = useState<QueuedAction[]>(loadQueue);
+  const [queuedActions, setQueuedActions] = useState<QueuedAction[]>([]);
+  const [isUnlocked, setIsUnlocked] = useState(false);
+
+  const loadQueue = useCallback(async () => {
+    const data = await loadQueueData(sharedPassphrase || undefined);
+    setQueuedActions(data);
+    if (sharedPassphrase) {
+      setIsUnlocked(true);
+    }
+  }, []);
+
+  // Fixed: Wrap loadQueue in an async init function
+  useEffect(() => {
+    const init = async () => {
+      await loadQueue();
+    };
+    init();
+  }, [loadQueue]);
 
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);
@@ -63,12 +125,25 @@ export function OfflineProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      localStorage.setItem(QUEUE_STORAGE_KEY, JSON.stringify(queuedActions));
-    }
+    const saveQueue = async () => {
+      if (queuedActions.length > 0 || localStorage.getItem(QUEUE_STORAGE_KEY)) {
+        await saveQueueData(queuedActions, sharedPassphrase || undefined);
+      }
+    };
+    saveQueue();
   }, [queuedActions]);
 
-  const queueAction = (type: string, description: string, data: unknown) => {
+  const unlockQueue = useCallback(async (passphrase: string): Promise<boolean> => {
+    try {
+      sharedPassphrase = passphrase;
+      await loadQueue();
+      return true;
+    } catch {
+      return false;
+    }
+  }, [loadQueue]);
+
+  const queueAction = useCallback((type: string, description: string, data: unknown) => {
     const newAction: QueuedAction = {
       id: Math.random().toString(36).substring(2, 9),
       type,
@@ -77,21 +152,23 @@ export function OfflineProvider({ children }: { children: React.ReactNode }) {
       timestamp: Date.now(),
     };
     setQueuedActions((prev) => [...prev, newAction]);
-  };
+  }, []);
 
-  const removeAction = (id: string) => {
+  const removeAction = useCallback((id: string) => {
     setQueuedActions((prev) => prev.filter((action) => action.id !== id));
-  };
+  }, []);
 
-  const retryQueuedActions = () => {
+  const retryQueuedActions = useCallback(() => {
     if (queuedActions.length === 0) {
       return;
     }
-
     setQueuedActions((prev) => [...prev]);
-  };
+  }, [queuedActions]);
 
-  const clearQueue = () => setQueuedActions([]);
+  const clearQueue = useCallback(() => {
+    setQueuedActions([]);
+    localStorage.removeItem(QUEUE_STORAGE_KEY);
+  }, []);
 
   return (
     <OfflineContext.Provider
@@ -102,6 +179,8 @@ export function OfflineProvider({ children }: { children: React.ReactNode }) {
         removeAction,
         retryQueuedActions,
         clearQueue,
+        isUnlocked,
+        unlockQueue,
       }}
     >
       {children}
@@ -116,3 +195,4 @@ export function useOffline() {
   }
   return context;
 }
+
