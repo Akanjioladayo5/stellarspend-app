@@ -77,7 +77,7 @@ export function useAnalytics(range: TimeRange): UseAnalyticsResult {
     return () => {
       cancelled = true;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [publicKey, range, refetchToken]);
 
   return { trend, categoryBreakdown, budgetVsActual, isLoading, error, refetch };

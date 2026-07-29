@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { motion } from "framer-motion";
 import { RefreshCw, TrendingUp, TrendingDown } from "lucide-react";
 import {
@@ -97,14 +97,17 @@ function AssetCard({ asset, index }: { asset: AssetBalance; index: number }) {
 function SkeletonCard() {
   return (
     <div className="flex flex-col gap-4 p-5 rounded-2xl border border-white/10 bg-white/[0.025] animate-pulse">
+      {/* Header row - matches AssetCard header */}
       <div className="flex items-center justify-between">
-        <div className="w-10 h-10 rounded-xl bg-white/10" />
-        <div className="w-16 h-4 rounded bg-white/10" />
+        <div className="w-10 h-10 rounded-xl bg-white/10 border border-white/10" />
+        <div className="w-20 h-5 rounded bg-white/10" />
       </div>
-      <div className="space-y-2">
-        <div className="w-12 h-3 rounded bg-white/10" />
-        <div className="w-24 h-6 rounded bg-white/10" />
-        <div className="w-16 h-3 rounded bg-white/10" />
+
+      {/* Balance section - matches AssetCard balance */}
+      <div className="space-y-1.5">
+        <div className="w-14 h-2.5 rounded bg-white/10" />
+        <div className="w-28 h-7 rounded bg-white/10" />
+        <div className="w-20 h-3 rounded bg-white/10" />
       </div>
     </div>
   );
@@ -117,21 +120,43 @@ export default function BalancesWidget() {
   const [loading, setLoading] = useState(true);
   const [spinning, setSpinning] = useState(false);
 
-  const load = async (manual = false) => {
-    if (manual) setSpinning(true);
-    setLoading(!data || manual ? true : false);
+  const load = useCallback(async (manual = false) => {
+    if (manual) {
+      setSpinning(true);
+      setLoading(true);
+    }
     try {
       const result = await fetchBalances();
       setData(result);
     } finally {
-      setLoading(false);
-      setSpinning(false);
+      if (manual) {
+        setLoading(false);
+        setSpinning(false);
+      } else {
+        setLoading(false);
+      }
     }
-  };
+  }, []);
 
   useEffect(() => {
-    load();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+    let mounted = true;
+    const loadData = async () => {
+      try {
+        const result = await fetchBalances();
+        if (mounted) {
+          setData(result);
+        }
+      } finally {
+        if (mounted) {
+          setLoading(false);
+        }
+      }
+    };
+    loadData();
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   return (
     <div className="rounded-3xl border border-white/10 bg-white/[0.02] backdrop-blur-sm p-6 space-y-5">
