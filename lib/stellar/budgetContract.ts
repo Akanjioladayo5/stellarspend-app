@@ -119,7 +119,7 @@ export async function submitContractTx(
     throw new Error(`Simulation failed: ${sim.error}`);
   }
 
-  tx = SorobanRpc.assembleTransaction(tx, sim);
+  tx = SorobanRpc.assembleTransaction(tx, sim).build();
 
   if (statusCallback) statusCallback('Awaiting wallet signature...');
   if (typeof window === 'undefined' || !window.freighter) {
@@ -138,7 +138,8 @@ export async function submitContractTx(
   }
 
   if (statusCallback) statusCallback('Submitting to network...');
-  const submitResp = await server.sendTransaction(signedTxXdr);
+  const signedTx = TransactionBuilder.fromXDR(signedTxXdr as string, networkPassphrase) as Transaction;
+  const submitResp = await server.sendTransaction(signedTx);
 
   if (submitResp.status === 'ERROR') {
     throw new Error(`Submission failed: ${submitResp.errorResult || JSON.stringify(submitResp)}`);
