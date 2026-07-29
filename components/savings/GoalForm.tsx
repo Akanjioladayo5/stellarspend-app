@@ -4,8 +4,8 @@ import React, { useState } from "react";
 import { z } from "zod";
 import { useForm } from "@/hooks/useForm";
 import { useOffline } from "@/components/offline/OfflineProvider";
-import { createSchedule } from "@/lib/savings/scheduler";
-import type { GoalSchedule } from "@/lib/types/savings";
+import useWallet from "@/hooks/useWallet";
+import { createGoal, Goal } from "@/lib/stellar/savingsGoalContract";
 
 const goalSchema = z.object({
     title: z.string().min(1, 'Goal title is required').max(100, 'Title is too long'),
@@ -20,11 +20,6 @@ const goalSchema = z.object({
         message: 'Deadline must be a future date',
     }),
     recurrence: z.enum(['once', 'monthly', 'yearly']),
-    contributionAmount: z.coerce
-        .number()
-        .positive('Contribution amount must be positive')
-        .min(0.01, 'Minimum contribution is 0.01 XLM')
-        .optional(),
 });
 
 type GoalFormData = z.infer<typeof goalSchema>;
@@ -32,18 +27,20 @@ type GoalFormData = z.infer<typeof goalSchema>;
 interface GoalFormProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
-    onGoalCreated: (goal: GoalFormData & { schedule?: GoalSchedule }) => void;
+    onGoalCreated: (goal: Goal) => void;
 }
 
 export default function GoalForm({ open, onOpenChange, onGoalCreated }: GoalFormProps) {
     const { isOnline, queueAction } = useOffline();
-    const [showContributionAmount, setShowContributionAmount] = useState(false);
+    const { freighter } = useWallet();
+    const publicKey = freighter.publicKey;
+    const [txStatus, setTxStatus] = useState<string | null>(null);
+
     const {
         register,
         handleSubmit,
         formState: { errors, isValid, isSubmitting },
         reset,
-        watch,
     } = useForm<GoalFormData>({
         schema: goalSchema,
         defaultValues: {
@@ -51,16 +48,9 @@ export default function GoalForm({ open, onOpenChange, onGoalCreated }: GoalForm
             targetAmount: 0,
             deadline: '',
             recurrence: 'once',
-            contributionAmount: 0,
         },
         mode: 'onChange',
     });
-
-    const recurrenceValue = watch('recurrence');
-
-    React.useEffect(() => {
-        setShowContributionAmount(recurrenceValue !== 'once');
-    }, [recurrenceValue]);
 
     const onSubmit = async (data: GoalFormData) => {
         if (!isOnline) {
@@ -71,17 +61,27 @@ export default function GoalForm({ open, onOpenChange, onGoalCreated }: GoalForm
             return;
         }
 
-        let schedule: GoalSchedule | undefined;
-        if (data.recurrence !== 'once' && data.contributionAmount && data.contributionAmount > 0) {
-            schedule = createSchedule(data.recurrence, data.contributionAmount);
+        if (!publicKey) {
+            alert('Please connect your Freighter wallet to persist this savings goal on-chain.');
+            return;
         }
 
-        console.log('Goal submitted:', { data, schedule });
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-        alert('Savings goal created successfully!');
-        onGoalCreated({ ...data, schedule });
-        reset();
-        onOpenChange(false);
+        try {
+            setTxStatus('Initializing transaction...');
+            const newGoal = await createGoal(publicKey, data, (status) => {
+                setTxStatus(status);
+            });
+            alert('Savings goal created successfully!');
+            onGoalCreated(newGoal);
+            reset();
+            onOpenChange(false);
+        } catch (error: unknown) {
+            console.error(error);
+            const errMessage = error instanceof Error ? error.message : String(error);
+            alert(`Failed to create savings goal: ${errMessage}`);
+        } finally {
+            setTxStatus(null);
+        }
     };
 
     return (
@@ -166,43 +166,30 @@ export default function GoalForm({ open, onOpenChange, onGoalCreated }: GoalForm
                         )}
                     </div>
 
-                    {showContributionAmount && (
-                        <div className="space-y-1">
-                            <label htmlFor="contributionAmount" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                                Contribution Amount (XLM)
-                            </label>
-                            <input
-                                id="contributionAmount"
-                                type="number"
-                                step="0.01"
-                                {...register('contributionAmount')}
-                                className={`w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-green-500 outline-none transition-all ${errors.contributionAmount ? 'border-red-500 bg-red-50' : 'border-gray-300 dark:border-gray-600 dark:bg-gray-700'
-                                    }`}
-                                placeholder="e.g. 50"
-                            />
-                            <p className="text-xs text-gray-500 dark:text-gray-400">
-                                Amount to contribute each {recurrenceValue === 'monthly' ? 'month' : 'year'}
-                            </p>
-                            {errors.contributionAmount && (
-                                <p className="text-xs text-red-500 mt-1">{errors.contributionAmount.message}</p>
-                            )}
-                        </div>
-                    )}
-
                     <div className="flex justify-end gap-2 pt-4">
+                        {txStatus && (
+                            <div className="text-xs text-blue-600 dark:text-blue-400 flex items-center gap-1.5 mr-auto">
+                                <svg className="animate-spin h-3.5 w-3.5 text-blue-600 dark:text-blue-400" fill="none" viewBox="0 0 24 24">
+                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                                </svg>
+                                <span className="font-medium">{txStatus}</span>
+                            </div>
+                        )}
                         <button
                             type="button"
                             onClick={() => onOpenChange(false)}
-                            className="px-4 py-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md"
+                            disabled={!!txStatus}
+                            className="px-4 py-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md disabled:opacity-50"
                         >
                             Cancel
                         </button>
                         <button
                             type="submit"
-                            disabled={!isValid || isSubmitting}
+                            disabled={!isValid || isSubmitting || !!txStatus}
                             className="px-6 py-2 bg-green-600 hover:bg-green-700 disabled:bg-green-300 text-white font-semibold rounded-lg shadow-md transition-colors duration-200"
                         >
-                            {isSubmitting ? 'Creating...' : 'Create Goal'}
+                            {txStatus ? 'Processing...' : 'Create Goal'}
                         </button>
                     </div>
                 </form>
