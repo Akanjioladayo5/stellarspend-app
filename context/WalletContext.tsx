@@ -349,7 +349,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
   const addWallet = useCallback((wallet: Omit<Wallet, "id" | "createdAt">) => {
     const newWallet: Wallet = {
       ...wallet,
-      id: wallet__,
+      id: crypto.randomUUID(),
       createdAt: Date.now(),
     };
 
@@ -471,3 +471,4 @@ export function useWalletContext() {
   }
   return context;
 }
+

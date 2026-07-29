@@ -7,7 +7,7 @@ import {
   loadPlaintext,
   migrateToEncrypted,
   detectPlaintextData,
-} from "../lib/crypto/localEncryption";
+} from "../../lib/crypto/localEncryption";
 
 /**
  * Represents a pending action that was queued while offline.
@@ -195,3 +195,4 @@ export function useOffline() {
   }
   return context;
 }
+
