@@ -611,3 +611,63 @@ export async function deleteBudget(id: string): Promise<void> {
   const filtered = mockBudgets.filter((b) => b.id !== id);
   setMockBudgetsFallback(filtered);
 }
+
+/**
+ * Submits a send payment transaction, optionally attaching a ZK proof.
+ */
+export async function sendPayment(
+  recipient: string,
+  amount: number,
+  asset: 'XLM' | 'USDC' | 'EURC',
+  proof?: string | Uint8Array
+): Promise<Transaction> {
+  await delay(500);
+
+  // Parse current balance
+  const balIndex = MOCK_BALANCES.balances.findIndex((b) => b.asset === asset);
+  if (balIndex !== -1) {
+    const currentVal = parseFloat(MOCK_BALANCES.balances[balIndex].balance.replace(/\s/g, ''));
+    if (currentVal < amount) {
+      throw new Error(`Insufficient funds: You have ${currentVal} ${asset} but tried to send ${amount}.`);
+    }
+    // Update balance
+    const nextVal = currentVal - amount;
+    MOCK_BALANCES.balances[balIndex].balance = nextVal.toLocaleString('en-US', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).replace(/,/g, ' '); // Match space format
+    
+    // Update usdValue
+    const conversionRates = { XLM: 0.15, USDC: 1.0, EURC: 1.08 };
+    MOCK_BALANCES.balances[balIndex].usdValue = nextVal * conversionRates[asset];
+    MOCK_BALANCES.totalUsd = MOCK_BALANCES.balances.reduce((acc, curr) => acc + curr.usdValue, 0);
+  }
+
+  // Create new transaction object
+  const newTx: Transaction = {
+    id: `tx_${Date.now()}`,
+    hash: Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join(''),
+    created_at: new Date().toISOString(),
+    memo: proof ? 'ZK Spending Limit' : 'Direct Payment',
+    successful: true,
+    fee_charged: '100',
+    max_fee: '1000',
+    operation_count: 1,
+    source_account: getConnectedPublicKey() || 'GDQD6A4P422X44QW6UXO6R6AOTHOV4C6A4P422X44QW6UXO6R6AOTHO',
+    ledger: 51234580,
+    operations: [
+      {
+        id: `op_${Date.now()}`,
+        type: 'payment',
+        amount: amount.toFixed(2),
+        asset_code: asset,
+        from: getConnectedPublicKey() || 'GDQD6A4P422X44QW6UXO6R6AOTHOV4C6A4P422X44QW6UXO6R6AOTHO',
+        to: recipient,
+      },
+    ],
+  };
+
+  MOCK_TRANSACTIONS.unshift(newTx);
+  return newTx;
+}
+

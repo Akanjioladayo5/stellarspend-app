@@ -6,11 +6,15 @@ import TransactionList from "@/components/transactions/TransactionList";
 import CustomSelect from "@/components/ui/CustomSelect";
 import { Search, Filter, RefreshCw } from "lucide-react";
 import { Transaction, FilterParams } from "@/lib/api/client";
+import SendPaymentModal from "@/components/transactions/SendPaymentModal";
+import { AnimatePresence } from "framer-motion";
+
 
 export default function TransactionsPage() {
   const [selectedTx, setSelectedTx] = useState<Transaction | null>(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
+  const [isSendModalOpen, setIsSendModalOpen] = useState(false);
 
   // Filter state
   const [filters, setFilters] = useState<FilterParams>({});
@@ -95,7 +99,10 @@ export default function TransactionsPage() {
             <button className="p-3 bg-white/[0.03] border border-white/10 rounded-2xl hover:bg-white/[0.08] hover:border-white/20 transition-all active:scale-95 group">
               <RefreshCw className="w-5 h-5 text-[#7a8aaa] group-hover:text-white transition-colors" />
             </button>
-            <button className="flex items-center gap-2 px-6 py-3 bg-[#e8b84b] hover:bg-[#f0c85a] text-[#1a0f00] font-bold rounded-2xl shadow-xl shadow-[#e8b84b]/10 transition-all hover:-translate-y-0.5 active:scale-[0.98] uppercase tracking-wider text-sm">
+            <button
+              onClick={() => setIsSendModalOpen(true)}
+              className="flex items-center gap-2 px-6 py-3 bg-[#e8b84b] hover:bg-[#f0c85a] text-[#1a0f00] font-bold rounded-2xl shadow-xl shadow-[#e8b84b]/10 transition-all hover:-translate-y-0.5 active:scale-[0.98] uppercase tracking-wider text-sm"
+            >
               Send Assets
             </button>
           </div>
@@ -225,6 +232,12 @@ export default function TransactionsPage() {
         onClose={() => setIsDrawerOpen(false)}
         transaction={selectedTx}
       />
+
+      <AnimatePresence>
+        {isSendModalOpen && (
+          <SendPaymentModal onClose={() => setIsSendModalOpen(false)} />
+        )}
+      </AnimatePresence>
     </div>
   );
 }
