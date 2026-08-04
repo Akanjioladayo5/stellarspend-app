@@ -37,11 +37,20 @@ export function EncryptionMigrationPrompt() {
       return;
     }
 
+    // setIsLoading(true);
+    // try {
+    //   await setPassphrase(passphrase);
+    //   setHasPlaintextData(false);
+    // } catch (err) {
+    //   setError("Failed to encrypt data. Please try again.");
+    // } finally {
+    //   setIsLoading(false);
+    // }
     setIsLoading(true);
     try {
       await setPassphrase(passphrase);
       setHasPlaintextData(false);
-    } catch (err) {
+    } catch {
       setError("Failed to encrypt data. Please try again.");
     } finally {
       setIsLoading(false);

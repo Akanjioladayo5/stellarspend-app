@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useTransition } from 'react';
 import i18next from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import commonEn from '@/locales/en/common.json';
@@ -67,17 +67,18 @@ export const I18nProvider: React.FC<I18nProviderProps> = ({
   initialLanguage = "en",
 }) => {
   const [language, setLanguage] = useState(initialLanguage);
+  const [, startTransition] = useTransition();
 
   useEffect(() => {
     if (typeof window !== "undefined") {
       const stored = localStorage.getItem("stellarspend_language");
       if (stored && (SUPPORTED_LANGUAGES as readonly string[]).includes(stored)) {
-        setLanguage(stored);
+        startTransition(() => setLanguage(stored));
         return;
       }
     }
 
-    setLanguage(initialLanguage);
+    startTransition(() => setLanguage(initialLanguage));
   }, [initialLanguage]);
 
   useEffect(() => {

@@ -155,6 +155,37 @@ export default function BudgetForm({ onSubmit, onCancel, initialData, isEditing 
                 </div>
 
                 <div className="space-y-1">
+    <label
+        className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+        id="period-label"
+    >
+        Period <span className="text-red-500" aria-label="required">*</span>
+    </label>
+    <div
+        role="radiogroup"
+        aria-labelledby="period-label"
+        aria-invalid={errors.period ? 'true' : 'false'}
+        aria-describedby={errors.period ? 'period-error' : undefined}
+        className="flex space-x-4"
+    >
+        {(["daily", "monthly", "quarterly"] as const).map((p) => (
+            <label key={p} className="flex items-center space-x-2 text-sm text-gray-700 dark:text-gray-300">
+                <input
+                    type="radio"
+                    value={p}
+                    {...register('period')}
+                    className="text-blue-600 focus:ring-blue-500"
+                />
+                <span className="capitalize">{p}</span>
+            </label>
+        ))}
+    </div>
+    {errors.period && (
+        <p id="period-error" className="text-xs text-red-500 mt-1" role="alert">{errors.period.message}</p>
+    )}
+</div>
+{/* 
+                <div className="space-y-1">
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                         Period <span className="text-red-500" aria-label="required">*</span>
                     </label>
@@ -176,7 +207,7 @@ export default function BudgetForm({ onSubmit, onCancel, initialData, isEditing 
                     {errors.period && (
                         <p id="period-error" className="text-xs text-red-500 mt-1" role="alert">{errors.period.message}</p>
                     )}
-                </div>
+                </div> */}
 
                 <div className="space-y-1">
                     <label htmlFor="startDate" className="block text-sm font-medium text-gray-700 dark:text-gray-300">

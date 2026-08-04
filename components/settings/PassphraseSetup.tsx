@@ -37,13 +37,24 @@ export function PassphraseSetup({ onComplete }: PassphraseSetupProps) {
       return;
     }
 
+    // setIsLoading(true);
+    // try {
+    //   await setPassphrase(passphrase);
+    //   await unlockQueue(passphrase);
+    //   setMode("unlock");
+    //   onComplete?.();
+    // } catch (err) {
+    //   setError("Failed to set passphrase. Please try again.");
+    // } finally {
+    //   setIsLoading(false);
+    // }
     setIsLoading(true);
     try {
       await setPassphrase(passphrase);
       await unlockQueue(passphrase);
       setMode("unlock");
       onComplete?.();
-    } catch (err) {
+    } catch {
       setError("Failed to set passphrase. Please try again.");
     } finally {
       setIsLoading(false);
