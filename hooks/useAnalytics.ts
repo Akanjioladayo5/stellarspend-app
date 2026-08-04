@@ -42,42 +42,41 @@ export function useAnalytics(range: TimeRange): UseAnalyticsResult {
 
   useEffect(() => {
     if (!publicKey) {
-      setTrend([]);
-      setCategoryBreakdown([]);
-      setBudgetVsActual([]);
       return;
     }
 
     let cancelled = false;
-    setIsLoading(true);
-    setError(null);
+    const timer = window.setTimeout(() => {
+      setIsLoading(true);
+      setError(null);
 
-    const window = getTimeWindow(range);
-    const granularity = getGranularity(range);
+      const window = getTimeWindow(range);
+      const granularity = getGranularity(range);
 
-    Promise.all([
-      getSpendingTrend({ accountPublicKey: publicKey, window, granularity }),
-      getCategoryBreakdown({ accountPublicKey: publicKey, window }),
-      getBudgetVsActual({ accountPublicKey: publicKey, window }),
-    ])
-      .then(([trendData, categoryData, budgetData]) => {
-        if (cancelled) return;
-        setTrend(trendData);
-        setCategoryBreakdown(categoryData);
-        setBudgetVsActual(budgetData);
-      })
-      .catch((err: unknown) => {
-        if (cancelled) return;
-        setError(err instanceof Error ? err.message : 'Failed to load analytics.');
-      })
-      .finally(() => {
-        if (!cancelled) setIsLoading(false);
-      });
+      Promise.all([
+        getSpendingTrend({ accountPublicKey: publicKey, window, granularity }),
+        getCategoryBreakdown({ accountPublicKey: publicKey, window }),
+        getBudgetVsActual({ accountPublicKey: publicKey, window }),
+      ])
+        .then(([trendData, categoryData, budgetData]) => {
+          if (cancelled) return;
+          setTrend(trendData);
+          setCategoryBreakdown(categoryData);
+          setBudgetVsActual(budgetData);
+        })
+        .catch((err: unknown) => {
+          if (cancelled) return;
+          setError(err instanceof Error ? err.message : 'Failed to load analytics.');
+        })
+        .finally(() => {
+          if (!cancelled) setIsLoading(false);
+        });
+    }, 0);
 
     return () => {
       cancelled = true;
+      window.clearTimeout(timer);
     };
-     
   }, [publicKey, range, refetchToken]);
 
   return { trend, categoryBreakdown, budgetVsActual, isLoading, error, refetch };

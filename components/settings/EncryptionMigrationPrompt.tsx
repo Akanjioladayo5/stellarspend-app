@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useWalletContext } from "../../context/WalletContext";
 import { detectPlaintextData } from "../../lib/crypto/localEncryption";
 
@@ -9,17 +9,15 @@ const QUEUE_STORAGE_KEY = "stellarspend_offline_queue";
 
 export function EncryptionMigrationPrompt() {
   const { setPassphrase } = useWalletContext();
-  const [hasPlaintextData, setHasPlaintextData] = useState(false);
+  const [hasPlaintextData, setHasPlaintextData] = useState(() => {
+    const hasWallets = detectPlaintextData(WALLETS_STORAGE_KEY);
+    const hasQueue = detectPlaintextData(QUEUE_STORAGE_KEY);
+    return hasWallets || hasQueue;
+  });
   const [passphrase, setPassphraseInput] = useState("");
   const [confirmPassphrase, setConfirmPassphrase] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-
-  useEffect(() => {
-    const hasWallets = detectPlaintextData(WALLETS_STORAGE_KEY);
-    const hasQueue = detectPlaintextData(QUEUE_STORAGE_KEY);
-    setHasPlaintextData(hasWallets || hasQueue);
-  }, []);
 
   if (!hasPlaintextData) {
     return null;

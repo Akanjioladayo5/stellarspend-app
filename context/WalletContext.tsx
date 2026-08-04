@@ -100,13 +100,8 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const [isUnlocked, setIsUnlocked] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [passphraseSet, setPassphraseSetState] = useState(false);
+  const [passphraseSet, setPassphraseSetState] = useState(isPassphraseSet());
   const [sessionPassphrase, setSessionPassphrase] = useState<string | null>(null);
-
-  // Check if passphrase is set on mount
-  useEffect(() => {
-    setPassphraseSetState(isPassphraseSet());
-  }, []);
 
   // Load wallets from localStorage on mount
   const loadWallets = useCallback(async (passphrase?: string) => {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   fetchBudgets,
   createBudget,
@@ -29,12 +29,7 @@ export default function BudgetsPage() {
     const [showForm, setShowForm] = useState(false);
     const [editingBudget, setEditingBudget] = useState<Budget | null>(null);
 
-    useEffect(() => {
-        loadBudgets();
-    }, []);
-
-
-    const loadBudgets = async () => {
+    const loadBudgets = useCallback(async () => {
         try {
             setLoading(true);
             const data = await fetchBudgets();
@@ -46,7 +41,15 @@ export default function BudgetsPage() {
         } finally {
             setLoading(false);
         }
-    };
+    }, []);
+
+    useEffect(() => {
+        const timer = window.setTimeout(() => {
+            void loadBudgets();
+        }, 0);
+
+        return () => window.clearTimeout(timer);
+    }, [loadBudgets]);
 
     const handleCreateBudget = async (budgetData: Omit<Budget, 'id' | 'createdAt' | 'updatedAt'>) => {
         if (!isOnline) {

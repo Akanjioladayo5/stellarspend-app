@@ -116,6 +116,8 @@ export async function decryptData<T>(encryptedData: string, passphrase: string):
  * Save encrypted data to localStorage
  */
 export async function saveEncrypted(key: string, data: unknown, passphrase: string): Promise<void> {
+  if (typeof window === 'undefined') return;
+
   const encrypted = await encryptData(data, passphrase);
   localStorage.setItem(STORAGE_KEYS.ENCRYPTED_PREFIX + key, encrypted);
 }
@@ -124,6 +126,8 @@ export async function saveEncrypted(key: string, data: unknown, passphrase: stri
  * Load and decrypt data from localStorage
  */
 export async function loadEncrypted<T>(key: string, passphrase: string): Promise<T | null> {
+  if (typeof window === 'undefined') return null;
+
   const encrypted = localStorage.getItem(STORAGE_KEYS.ENCRYPTED_PREFIX + key);
   if (!encrypted) return null;
   try {
@@ -137,6 +141,8 @@ export async function loadEncrypted<T>(key: string, passphrase: string): Promise
  * Check if data is encrypted (vs plaintext)
  */
 export function isEncrypted(key: string): boolean {
+  if (typeof window === 'undefined') return false;
+
   const data = localStorage.getItem(key);
   if (!data) return false;
   // Encrypted data starts with base64 characters and has length > 50
@@ -147,6 +153,8 @@ export function isEncrypted(key: string): boolean {
  * Save plaintext data (migration helper)
  */
 export function savePlaintext(key: string, data: unknown): void {
+  if (typeof window === 'undefined') return;
+
   localStorage.setItem(key, JSON.stringify(data));
 }
 
@@ -154,6 +162,8 @@ export function savePlaintext(key: string, data: unknown): void {
  * Load plaintext data (migration helper)
  */
 export function loadPlaintext<T>(key: string): T | null {
+  if (typeof window === 'undefined') return null;
+
   const data = localStorage.getItem(key);
   if (!data) return null;
   try {
@@ -167,6 +177,8 @@ export function loadPlaintext<T>(key: string): T | null {
  * Remove stored data
  */
 export function removeStoredData(key: string): void {
+  if (typeof window === 'undefined') return;
+
   localStorage.removeItem(key);
   localStorage.removeItem(STORAGE_KEYS.ENCRYPTED_PREFIX + key);
 }
@@ -175,6 +187,8 @@ export function removeStoredData(key: string): void {
  * Check if passphrase is set
  */
 export function isPassphraseSet(): boolean {
+  if (typeof window === 'undefined') return false;
+
   return localStorage.getItem(STORAGE_KEYS.PASSPHRASE_SET) === 'true';
 }
 
@@ -182,6 +196,8 @@ export function isPassphraseSet(): boolean {
  * Set passphrase flag
  */
 export function setPassphraseSet(): void {
+  if (typeof window === 'undefined') return;
+
   localStorage.setItem(STORAGE_KEYS.PASSPHRASE_SET, 'true');
 }
 
@@ -189,6 +205,8 @@ export function setPassphraseSet(): void {
  * Reset encryption (forgot passphrase recovery)
  */
 export function resetEncryption(): void {
+  if (typeof window === 'undefined') return;
+
   // Get all encrypted keys
   const keys: string[] = [];
   for (let i = 0; i < localStorage.length; i++) {
@@ -207,6 +225,8 @@ export function resetEncryption(): void {
  * Check if data is encrypted vs plaintext by looking at the raw data
  */
 export function detectPlaintextData(key: string): boolean {
+  if (typeof window === 'undefined') return false;
+
   const data = localStorage.getItem(key);
   if (!data) return false;
   // If it's plaintext, it should be valid JSON

@@ -1,10 +1,14 @@
-import { 
-  encryptData, 
-  decryptData, 
+import { describe, beforeEach, expect, test } from '@jest/globals';
+
+import {
+  encryptData,
+  decryptData,
   generateSalt,
   isPassphraseSet,
   setPassphraseSet,
-  resetEncryption 
+  resetEncryption,
+  loadPlaintext,
+  detectPlaintextData,
 } from '../localEncryption';
 
 describe('localEncryption', () => {
@@ -46,5 +50,25 @@ describe('localEncryption', () => {
     expect(isPassphraseSet()).toBe(true);
     resetEncryption();
     expect(isPassphraseSet()).toBe(false);
+  });
+
+  test('storage helpers are safe when window is unavailable', () => {
+    const originalWindowDescriptor = Object.getOwnPropertyDescriptor(globalThis, 'window');
+
+    Object.defineProperty(globalThis, 'window', {
+      value: undefined,
+      configurable: true,
+      writable: true,
+    });
+
+    expect(isPassphraseSet()).toBe(false);
+    expect(loadPlaintext('missing')).toBeNull();
+    expect(detectPlaintextData('missing')).toBe(false);
+
+    if (originalWindowDescriptor) {
+      Object.defineProperty(globalThis, 'window', originalWindowDescriptor);
+    } else {
+      delete (globalThis as typeof globalThis & { window?: undefined }).window;
+    }
   });
 });

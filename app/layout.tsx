@@ -38,13 +38,9 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  // `lang`/`dir` here are the server-rendered defaults (English/LTR).
-  // I18nProvider reads the persisted language client-side (localStorage)
-  // and flips document.documentElement.dir/lang before paint when the
-  // stored preference is a non-English or RTL language. suppressHydrationWarning
-  // prevents a false-positive mismatch warning for that one-time correction.
+  // Keep the server-rendered HTML stable and let the client update direction/language after mount.
   return (
-    <html lang="en" dir="ltr" suppressHydrationWarning>
+    <html lang="en" dir="ltr">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased font-sans`}
       >

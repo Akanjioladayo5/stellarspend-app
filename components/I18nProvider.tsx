@@ -66,20 +66,23 @@ export const I18nProvider: React.FC<I18nProviderProps> = ({
   children,
   initialLanguage = "en",
 }) => {
-  const [language, setLanguage] = useState(() => {
-    // Initialize language from localStorage or default
-    if (typeof window !== 'undefined') {
-      const stored = localStorage.getItem('stellarspend_language');
+  const [language, setLanguage] = useState(initialLanguage);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const stored = localStorage.getItem("stellarspend_language");
       if (stored && (SUPPORTED_LANGUAGES as readonly string[]).includes(stored)) {
-        return stored;
+        setLanguage(stored);
+        return;
       }
     }
-    return initialLanguage;
-  });
+
+    setLanguage(initialLanguage);
+  }, [initialLanguage]);
 
   useEffect(() => {
     // Set i18next language when language changes
-    i18next.changeLanguage(language);
+    void i18next.changeLanguage(language);
     applyDocumentDirection(language);
   }, [language]);
 
