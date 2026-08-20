@@ -1,0 +1,6 @@
+[package]
+name = "spending_proof"
+type = "bin"
+compiler_version = ">=0.1.0"
+
+[dependencies]

@@ -10,6 +10,7 @@ const customJestConfig = {
   setupFilesAfterEnv: ["<rootDir>/jest.setup.ts"],
   moduleNameMapper: {
     "^@/(.*)$": "<rootDir>/$1",
+    "^\\./wasmLoader$": "<rootDir>/lib/zk/__mocks__/wasmLoader.ts",
   },
 };
 
