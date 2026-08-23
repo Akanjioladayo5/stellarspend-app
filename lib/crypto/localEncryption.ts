@@ -87,15 +87,17 @@ export async function encryptData(data: unknown, passphrase: string): Promise<st
   return btoa(String.fromCharCode(...combined));
 }
 
+const SALT_HEX_LENGTH = SALT_LENGTH * 2;
+
 /**
  * Decrypt data with a passphrase
  */
 export async function decryptData<T>(encryptedData: string, passphrase: string): Promise<T> {
   const combined = Uint8Array.from(atob(encryptedData), c => c.charCodeAt(0));
 
-  const salt = new TextDecoder().decode(combined.slice(0, SALT_LENGTH));
-  const iv = combined.slice(SALT_LENGTH, SALT_LENGTH + IV_LENGTH);
-  const encrypted = combined.slice(SALT_LENGTH + IV_LENGTH);
+  const salt = new TextDecoder().decode(combined.slice(0, SALT_HEX_LENGTH));
+  const iv = combined.slice(SALT_HEX_LENGTH, SALT_HEX_LENGTH + IV_LENGTH);
+  const encrypted = combined.slice(SALT_HEX_LENGTH + IV_LENGTH);
 
   const key = await deriveKey(passphrase, salt);
 
