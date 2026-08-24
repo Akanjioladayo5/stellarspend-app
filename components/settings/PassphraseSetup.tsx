@@ -8,6 +8,18 @@ interface PassphraseSetupProps {
   onComplete?: () => void;
 }
 
+/**
+ * PassphraseSetup
+ *
+ * Manages the encryption passphrase lifecycle for the wallet. It lets users set
+ * a new passphrase to encrypt their wallet data and offline actions, unlock
+ * previously encrypted local data, or reset all local data when the passphrase
+ * is forgotten.
+ *
+ * It appears whenever the wallet's encrypted data is locked — e.g. on first run
+ * (when no passphrase has been set yet) or after a session lock — and is
+ * rendered in place of the normal app content until the passphrase is provided.
+ */
 export function PassphraseSetup({ onComplete }: PassphraseSetupProps) {
   const { passphraseSet, setPassphrase, unlock, resetLocalData } = useWalletContext();
   const { unlockQueue } = useOffline();
