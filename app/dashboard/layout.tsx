@@ -10,6 +10,8 @@ import {
   Menu,
   X,
   Gauge,
+  ShieldCheck,
+  PieChart,
 } from "lucide-react";
 import { Starfield } from "@/components/ui/Starfield";
 import LanguageSelector from "@/components/settings/LanguageSelector";
@@ -17,6 +19,8 @@ import LanguageSelector from "@/components/settings/LanguageSelector";
 const NAV = [
   { href: "/dashboard", label: "Overview", icon: LayoutDashboard },
   { href: "/dashboard/transactions", label: "Transactions", icon: Receipt },
+  { href: "/dashboard/budgets", label: "Budgets", icon: PieChart },
+  { href: "/dashboard/spending-limits", label: "Spending Limits", icon: ShieldCheck },
   { href: "/dashboard/settings", label: "Settings", icon: Settings },
 ];
 
