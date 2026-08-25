@@ -38,9 +38,10 @@ interface BudgetFormProps {
     onCancel?: () => void;
     initialData?: Budget | null;
     isEditing?: boolean;
+    budgetCount?: number;
 }
 
-export default function BudgetForm({ onSubmit, onCancel, initialData, isEditing = false }: BudgetFormProps) {
+export default function BudgetForm({ onSubmit, onCancel, initialData, isEditing = false, budgetCount = 0 }: BudgetFormProps) {
     const { isOnline: _isOnline, queueAction: _queueAction } = useOffline();
     
     // Calculate default end date once per component mount
@@ -71,6 +72,14 @@ export default function BudgetForm({ onSubmit, onCancel, initialData, isEditing 
             <h2 className="text-2xl font-bold mb-6 text-gray-900 dark:text-white">
                 {isEditing ? 'Edit Budget' : 'Create Budget'}
             </h2>
+
+            {!isEditing && budgetCount === 0 && (
+                <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                    <p className="text-sm text-blue-700 dark:text-blue-300">
+                        You don&apos;t have any budgets yet. Create your first budget to start tracking your spending limits.
+                    </p>
+                </div>
+            )}
 
             <form onSubmit={(handleSubmit as unknown as (handler: (data: BudgetFormData) => void) => React.FormEventHandler<HTMLFormElement>)((data: BudgetFormData) => onSubmit(data))} className="space-y-4" noValidate>
                 <div className="space-y-1">

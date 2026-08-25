@@ -186,6 +186,7 @@ export default function GoalForm({ open, onOpenChange, onGoalCreated }: GoalForm
                         </button>
                         <button
                             type="submit"
+                            aria-label="Create savings goal"
                             disabled={!isValid || isSubmitting || !!txStatus}
                             className="px-6 py-2 bg-green-600 hover:bg-green-700 disabled:bg-green-300 text-white font-semibold rounded-lg shadow-md transition-colors duration-200"
                         >
