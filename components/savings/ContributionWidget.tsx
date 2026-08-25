@@ -255,7 +255,7 @@ export function ContributionWidget({
                 <Button variant="outline" onClick={() => setOpen(false)}>
                   Cancel
                 </Button>
-                <Button type="submit">Contribute</Button>
+                <Button type="submit" aria-label="Add contribution">Contribute</Button>
               </div>
             </form>
           </DialogContent>
