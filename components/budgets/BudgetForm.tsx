@@ -80,6 +80,7 @@ export default function BudgetForm({ onSubmit, onCancel, initialData, isEditing 
                     <input
                         id="name"
                         {...register('name')}
+                        aria-required="true"
                         aria-invalid={errors.name ? 'true' : 'false'}
                         aria-describedby={errors.name ? 'name-error' : undefined}
                         className={`w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 outline-none transition-colors ${errors.name ? 'border-red-500 bg-red-50' : 'border-gray-300 dark:border-gray-600 dark:bg-gray-700'
@@ -100,6 +101,7 @@ export default function BudgetForm({ onSubmit, onCancel, initialData, isEditing 
                         type="number"
                         step="0.01"
                         {...register('amount')}
+                        aria-required="true"
                         aria-invalid={errors.amount ? 'true' : 'false'}
                         aria-describedby={errors.amount ? 'amount-error' : undefined}
                         className={`w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 outline-none transition-colors ${errors.amount ? 'border-red-500 bg-red-50' : 'border-gray-300 dark:border-gray-600 dark:bg-gray-700'
@@ -118,6 +120,7 @@ export default function BudgetForm({ onSubmit, onCancel, initialData, isEditing 
                     <select
                         id="category"
                         {...register('category')}
+                        aria-required="true"
                         aria-invalid={errors.category ? 'true' : 'false'}
                         aria-describedby={errors.category ? 'category-error' : undefined}
                         className={`w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 outline-none transition-colors ${errors.category ? 'border-red-500 bg-red-50' : 'border-gray-300 dark:border-gray-600 dark:bg-gray-700'
@@ -164,6 +167,7 @@ export default function BudgetForm({ onSubmit, onCancel, initialData, isEditing 
     <div
         role="radiogroup"
         aria-labelledby="period-label"
+        aria-required="true"
         aria-invalid={errors.period ? 'true' : 'false'}
         aria-describedby={errors.period ? 'period-error' : undefined}
         className="flex space-x-4"
