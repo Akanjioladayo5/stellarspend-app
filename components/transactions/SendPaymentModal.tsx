@@ -221,6 +221,7 @@ export default function SendPaymentModal({ onClose }: SendPaymentModalProps) {
                   placeholder="G..."
                   value={recipient}
                   onChange={(e) => setRecipient(e.target.value)}
+                  autoComplete="off"
                   className="w-full px-4 py-3.5 bg-white/[0.03] border border-white/10 rounded-2xl text-white font-mono text-sm placeholder-[#7a8aaa]/40 focus:outline-none focus:ring-2 focus:ring-[#e8b84b]/30 focus:border-[#e8b84b]/40 transition-all"
                 />
               </div>

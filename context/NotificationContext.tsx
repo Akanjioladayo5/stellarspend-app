@@ -36,6 +36,19 @@ interface NotificationContextType {
   updatePreferences: (prefs: Partial<NotificationPreferences>) => void;
 }
 
+
+
+interface NotificationContextType {
+  notifications: Notification[];
+  toasts: Notification[];
+  addNotification: (type: NotificationType, message: string) => void;
+  markAsRead: (id: string) => void;
+  markAllAsRead: () => void;
+  removeToast: (id: string) => void;
+  clearAll: () => void;
+  preferences: NotificationPreferences;
+  updatePreferences: (prefs: Partial<NotificationPreferences>) => void;
+}
 export const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
 
 const STORAGE_KEY = "stellarspend_notifications";
