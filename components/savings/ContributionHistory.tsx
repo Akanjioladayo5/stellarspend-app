@@ -118,7 +118,7 @@ export function ContributionHistory({
             {hasMore && (
               <div className="pt-2">
                 <Button
-                  variant="ghost"
+                  variant="outline"
                   size="sm"
                   className="w-full text-xs"
                   onClick={() => setShowAll(!showAll)}
