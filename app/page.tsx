@@ -100,7 +100,7 @@ const FEATURE_SLIDES: CarouselSlide[] = [
 
 export default function HomePage() {
   return (
-    <main id="main-content">
+    <main>
       <Hero />
 
       <section
