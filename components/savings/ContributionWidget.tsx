@@ -58,11 +58,12 @@ export function ContributionWidget({
     const chronological = [...goalContributions].sort(
       (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
     )
-    let cumulative = 0
-    const withRunningTotal = chronological.map((c) => {
-      cumulative += c.amount
-      return { ...c, runningTotal: cumulative }
-    })
+    const withRunningTotal = chronological.map((c, index) => ({
+      ...c,
+      runningTotal: chronological
+        .slice(0, index + 1)
+        .reduce((total, contribution) => total + contribution.amount, 0),
+    }))
     return withRunningTotal
       .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
       .slice(0, 5)
