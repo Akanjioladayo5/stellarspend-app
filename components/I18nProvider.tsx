@@ -13,16 +13,6 @@ import { isRTL as computeIsRTL, getIntlLocale, SUPPORTED_LANGUAGES } from '@/lib
 
 const LANGUAGE_STORAGE_KEY = "stellarspend_language";
 
-function detectBrowserLanguage(): string {
-  if (typeof navigator === "undefined") return "en";
-  const supported = SUPPORTED_LANGUAGES as readonly string[];
-  for (const candidate of navigator.languages || [navigator.language]) {
-    const language = candidate.split("-")[0].toLowerCase();
-    if (supported.includes(language)) return language;
-  }
-  return "en";
-}
-
 /**
  * Detect the browser's preferred language and match to supported languages.
  * Falls back to 'en' if no match is found.
