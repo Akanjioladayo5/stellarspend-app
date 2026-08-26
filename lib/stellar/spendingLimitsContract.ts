@@ -1,3 +1,12 @@
+/**
+ * lib/stellar/spendingLimitsContract.ts
+ *
+ * Client for the on-chain spending-limits Soroban contract. Provides functions
+ * to set, fetch, record, and delete per-asset spending limits backed by a
+ * deployed Soroban contract when NEXT_PUBLIC_SPENDING_LIMITS_CONTRACT_ID is
+ * configured, falling back to localStorage mock data for offline/testnet usage.
+ */
+
 import {
   Contract,
   TransactionBuilder,
@@ -11,6 +20,7 @@ import {
 import { getSorobanServer, getNetworkPassphrase } from '@/lib/api/stellar/client';
 import { triggerNotification } from './budgetContract';
 
+/** The time period over which a spending limit is enforced. */
 export type SpendingPeriod = 'daily' | 'weekly' | 'monthly';
 export type AssetCode = 'XLM' | 'USDC' | 'EURC';
 
@@ -39,6 +49,11 @@ export interface RemainingSpendingAllowance {
 const SPENDING_LIMITS_CONTRACT_ID = process.env.NEXT_PUBLIC_SPENDING_LIMITS_CONTRACT_ID || '';
 const LOCAL_SPENDING_LIMITS_KEY = 'stellarspend_local_spending_limits';
 
+/**
+ * Returns the duration in milliseconds for a given spending period.
+ * @param period - The spending period ('daily', 'weekly', or 'monthly').
+ * @returns The duration in milliseconds.
+ */
 export function getPeriodDurationMs(period: SpendingPeriod): number {
   switch (period) {
     case 'daily':
@@ -72,6 +87,11 @@ export function normalizeLimit(limit: SpendingLimit): SpendingLimit {
   return limit;
 }
 
+/**
+ * Loads mock spending limits from localStorage, normalizing any expired periods.
+ * Returns default weekly USDC and monthly XLM limits if nothing is stored.
+ * @returns An array of normalized SpendingLimit objects.
+ */
 export function getMockSpendingLimitsFallback(): SpendingLimit[] {
   if (typeof window === 'undefined') return [];
   const stored = localStorage.getItem(LOCAL_SPENDING_LIMITS_KEY);
@@ -119,6 +139,10 @@ export function getMockSpendingLimitsFallback(): SpendingLimit[] {
   return defaultLimits;
 }
 
+/**
+ * Persists spending limits to localStorage.
+ * @param limits - The array of SpendingLimit objects to store.
+ */
 export function setMockSpendingLimitsFallback(limits: SpendingLimit[]) {
   if (typeof window !== 'undefined') {
     localStorage.setItem(LOCAL_SPENDING_LIMITS_KEY, JSON.stringify(limits));
@@ -256,7 +280,9 @@ async function submitContractTx(
 }
 
 /**
- * Fetch all spending limits for a user
+ * Fetch all spending limits for a user.
+ * @param publicKey - The Stellar public key of the limit owner (optional, defaults to a demo key).
+ * @returns An array of SpendingLimit objects, normalized for expired periods.
  */
 export async function getLimits(publicKey?: string): Promise<SpendingLimit[]> {
   const effectiveKey = publicKey || 'GDQD6A4P422X44QW6UXO6R6AOTHOV4C6A4P422X44QW6UXO6R6AOTHO';
@@ -304,7 +330,10 @@ export async function getLimits(publicKey?: string): Promise<SpendingLimit[]> {
 }
 
 /**
- * Get remaining spending allowance for a specific asset
+ * Calculates the remaining spending allowance for a specific asset.
+ * @param publicKey - The Stellar public key of the limit owner (optional).
+ * @param asset - The asset code to check (defaults to 'USDC').
+ * @returns The remaining allowance details, or null if no limit is set for the asset.
  */
 export async function getRemaining(
   publicKey?: string,
@@ -331,7 +360,13 @@ export async function getRemaining(
 }
 
 /**
- * Set or update a spending limit
+ * Creates or updates a spending limit for a given asset.
+ * @param publicKey - The Stellar public key of the limit owner.
+ * @param asset - The asset code to limit (e.g. 'USDC', 'XLM').
+ * @param limitAmount - The maximum spend amount for the period.
+ * @param period - The time period over which the limit applies.
+ * @param statusCallback - Optional callback for progress updates.
+ * @returns The created or updated SpendingLimit object.
  */
 export async function setLimit(
   publicKey: string,
@@ -418,7 +453,10 @@ export async function setLimit(
 }
 
 /**
- * Record a spend towards the limit of an asset
+ * Records a spend against the limit of a specific asset.
+ * @param publicKey - The Stellar public key of the limit owner (optional).
+ * @param asset - The asset code being spent (defaults to 'USDC').
+ * @param amount - The amount spent (defaults to 0).
  */
 export async function recordSpend(
   publicKey?: string,
@@ -469,7 +507,10 @@ export async function recordSpend(
 }
 
 /**
- * Delete an existing spending limit
+ * Deletes an existing spending limit by ID or asset code.
+ * @param publicKey - The Stellar public key of the limit owner (optional).
+ * @param idOrAsset - The limit ID or asset code to delete.
+ * @param statusCallback - Optional callback for progress updates.
  */
 export async function deleteLimit(
   publicKey?: string,

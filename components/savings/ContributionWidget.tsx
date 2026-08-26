@@ -245,6 +245,7 @@ export function ContributionWidget({
                   type="number"
                   placeholder="Enter amount"
                   step="0.01"
+                  inputMode="decimal"
                   value={customAmount}
                   onChange={(e) => setCustomAmount(e.target.value)}
                   autoFocus
