@@ -149,7 +149,7 @@ export default function BudgetForm({ onSubmit, onCancel, initialData, isEditing 
                         aria-describedby={errors.name ? 'name-error' : undefined}
                         className={`w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 outline-none transition-colors ${errors.name ? 'border-red-500 bg-red-50' : 'border-gray-300 dark:border-gray-600 dark:bg-gray-700'
                             }`}
-                        placeholder="e.g. Groceries"
+                        placeholder="e.g. Monthly Groceries"
                     />
                     {errors.name && (
                         <p id="name-error" className="text-xs text-red-500 mt-1" role="alert">{errors.name.message}</p>
@@ -164,6 +164,7 @@ export default function BudgetForm({ onSubmit, onCancel, initialData, isEditing 
                         id="amount"
                         type="number"
                         step="0.01"
+                        inputMode="decimal"
                         {...register('amount')}
                         aria-required="true"
                         aria-invalid={errors.amount ? 'true' : 'false'}
