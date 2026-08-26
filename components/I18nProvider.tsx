@@ -13,6 +13,16 @@ import { isRTL as computeIsRTL, getIntlLocale, SUPPORTED_LANGUAGES } from '@/lib
 
 const LANGUAGE_STORAGE_KEY = "stellarspend_language";
 
+function detectBrowserLanguage(): string {
+  if (typeof navigator === "undefined") return "en";
+  const supported = SUPPORTED_LANGUAGES as readonly string[];
+  for (const candidate of navigator.languages || [navigator.language]) {
+    const language = candidate.split("-")[0].toLowerCase();
+    if (supported.includes(language)) return language;
+  }
+  return "en";
+}
+
 /**
  * Detect the browser's preferred language and match to supported languages.
  * Falls back to 'en' if no match is found.
@@ -107,21 +117,18 @@ export const I18nProvider: React.FC<I18nProviderProps> = ({
   initialLanguage = "en",
 }) => {
   const [language, setLanguage] = useState(initialLanguage);
-  const [isHydrated, setIsHydrated] = useState(false);
   const [, startTransition] = useTransition();
 
   // Hydration effect: restore language from localStorage or detect browser language
   useEffect(() => {
     if (typeof window === "undefined") return;
 
-    const resolvedLanguage = getInitialLanguage();
-
-    if (resolvedLanguage !== language) {
-      startTransition(() => setLanguage(resolvedLanguage));
-    }
-
-    setIsHydrated(true);
-  }, []); // Run once on mount
+    const stored = localStorage.getItem(LANGUAGE_STORAGE_KEY);
+    const resolvedLanguage = stored && (SUPPORTED_LANGUAGES as readonly string[]).includes(stored)
+      ? stored
+      : detectBrowserLanguage();
+    if (resolvedLanguage !== language) startTransition(() => setLanguage(resolvedLanguage));
+  }, [language]);
 
   // Apply language changes to i18next and document direction
   useEffect(() => {

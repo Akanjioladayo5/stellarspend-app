@@ -30,7 +30,6 @@ export const LanguageSelector: React.FC<LanguageSelectorProps> = ({
   className = "",
 }) => {
   const { language, changeLanguage, isRTL } = useI18n();
-  const _currentLanguage = languages.find(l => l.code === language) || languages[0];
 
   const handleLanguageChange = async (lng: string) => {
     try {
