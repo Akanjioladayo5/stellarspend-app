@@ -90,11 +90,12 @@ export default function TransactionList({
 
       // Format transactions for CSV
       const rows = allTransactions.map((tx) => {
-        const date = new Date(tx.created_at || tx.date || "").toISOString().split("T")[0];
-        const description = (tx.description || tx.memo || "").replace(/"/g, '""');
-        const amount = tx.amount?.toString() || "0";
-        const type = tx.type || tx.operation_type || "unknown";
-        const status = tx.status || "completed";
+        const operation = tx.operations[0];
+        const date = new Date(tx.created_at).toISOString().split("T")[0];
+        const description = (tx.memo || "").replace(/"/g, '""');
+        const amount = operation?.amount || "0";
+        const type = operation?.type || "unknown";
+        const status = tx.successful ? "completed" : "failed";
 
         return [
           date,
