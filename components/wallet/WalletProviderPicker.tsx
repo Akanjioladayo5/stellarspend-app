@@ -49,11 +49,18 @@ export default function WalletProviderPicker({
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (open) {
-      setError(null);
-      setLoadingId(null);
-      getProviderMetaList().then(setProviders);
-    }
+    if (!open) return;
+
+    let cancelled = false;
+    getProviderMetaList().then((list) => {
+      if (!cancelled) {
+        setProviders(list);
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
   }, [open]);
 
   const handleConnect = async (providerId: WalletProviderId) => {
