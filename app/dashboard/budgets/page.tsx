@@ -185,6 +185,7 @@ export default function BudgetsPage() {
             onCancel={handleCancelForm}
             initialData={editingBudget}
             isEditing={!!editingBudget}
+            budgetCount={budgets.length}
           />
         </div>
       )}

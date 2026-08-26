@@ -39,6 +39,10 @@ interface BudgetFormProps {
     onCancel?: () => void;
     initialData?: Budget | null;
     isEditing?: boolean;
+    budgetCount?: number;
+}
+
+export default function BudgetForm({ onSubmit, onCancel, initialData, isEditing = false, budgetCount = 0 }: BudgetFormProps) {
     spent?: number;
 }
 
